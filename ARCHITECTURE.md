@@ -1,19 +1,20 @@
 # Architecture Document
 
 ## Overview
-Cycling Routes Web Application - A Laravel 11+ application for submitting, discovering, and organizing group rides on cycling routes via GPX upload.
+Cycling Routes Web Application - A Laravel 13 application for submitting, discovering, and organizing group rides on cycling routes via GPX upload.
 
 ## Tech Stack
 
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
-| Framework | Laravel | 11.x | Core framework, routing, ORM, auth |
-| Database | PostgreSQL | 15+ | Primary data store with PostGIS |
+| Framework | Laravel | 13.x | Core framework, routing, ORM, auth |
+| Database | PostgreSQL | 16+ | Primary data store with PostGIS |
 | Extension | PostGIS | 3.4+ | Geospatial queries, geometry storage |
 | Frontend | Blade + Alpine.js | 3.x | Server-rendered with reactive components |
+| Build | Vite / Tailwind CSS | 5.x / 3.x | Asset bundling and styling |
 | Maps | Leaflet.js | 1.9+ | Interactive maps with OSM tiles |
-| Auth | Laravel Breeze | 1.x | Authentication scaffolding |
-| Queue | Redis + Horizon | 7.x / 5.x | Background jobs, GPX processing |
+| Auth | Laravel Breeze | 2.x | Authentication scaffolding (blade stack) |
+| Queue | Database driver | - | Background notifications, reminders |
 | Charts | Chart.js | 4.x | Elevation profiles |
 | GPX Parsing | Native SimpleXML | - | Custom parser service |
 
@@ -46,10 +47,10 @@ Cycling Routes Web Application - A Laravel 11+ application for submitting, disco
           │
           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Redis + Horizon                        │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐              │
-│  │ GPX Jobs   │ │Notifications│ │  Reminders │              │
-│  └────────────┘ └────────────┘ └────────────┘              │
+│                      Database Queue                         │
+│  ┌────────────────────┐ ┌────────────────────┐              │
+│  │ Notifications      │ │  Ride Reminders    │              │
+│  └────────────────────┘ └────────────────────┘              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -91,9 +92,9 @@ Cycling Routes Web Application - A Laravel 11+ application for submitting, disco
 
 ### 1. GPX Processing Pipeline
 ```
-Upload → Validation → Parse (Job) → Compute Stats → Store Geometry + JSONB → Notify User
+Upload → Validation → Parse (GpxParser service) → Compute Stats → Store Geometry + JSONB
 ```
-- Async via queued job to avoid request timeout
+- Parsed synchronously in the request by `App\Services\GpxParser`
 - Parser extracts: track points, elevation, waypoints, bounds
 - Computes: distance (Haversine), elevation gain (positive deltas)
 - Stores: PostGIS LINESTRING for spatial queries, JSONB for full fidelity
@@ -125,24 +126,37 @@ Ride Created (v1) → Users Join (stored with v1)
 
 | Method | URI | Controller | Name |
 |--------|-----|------------|------|
+| GET | / | redirect → rides.index | - |
+| GET | /dashboard | redirect → rides.index | dashboard |
 | GET | /routes | RouteController@index | routes.index |
 | GET | /routes/map | RouteController@map | routes.map |
 | GET | /routes/create | RouteController@create | routes.create |
 | POST | /routes | RouteController@store | routes.store |
 | GET | /routes/{route} | RouteController@show | routes.show |
+| GET | /routes/{route}/download | RouteController@download | routes.download |
 | GET | /routes/{route}/edit | RouteController@edit | routes.edit |
 | PUT | /routes/{route} | RouteController@update | routes.update |
 | DELETE | /routes/{route} | RouteController@destroy | routes.destroy |
 | POST | /routes/{route}/rate | RatingController@store | routes.rate |
 | POST | /routes/{route}/comments | CommentController@store | routes.comments.store |
+| PUT | /comments/{comment} | CommentController@update | comments.update |
+| DELETE | /comments/{comment} | CommentController@destroy | comments.destroy |
 | POST | /routes/{route}/features | FeatureController@store | routes.features.store |
 | DELETE | /features/{feature} | FeatureController@destroy | features.destroy |
 | GET | /rides | RideController@index | rides.index |
+| GET | /rides/create | RideController@create | rides.create |
 | POST | /rides | RideController@store | rides.store |
 | GET | /rides/{ride} | RideController@show | rides.show |
+| GET | /rides/{ride}/edit | RideController@edit | rides.edit |
+| PUT | /rides/{ride} | RideController@update | rides.update |
+| DELETE | /rides/{ride} | RideController@destroy | rides.destroy |
 | POST | /rides/{ride}/join | RideAttendeeController@join | rides.join |
 | DELETE | /rides/{ride}/leave | RideAttendeeController@leave | rides.leave |
-| PUT | /rides/{ride} | RideController@update | rides.update |
+| GET | /rides/{ride}/attendee-status | RideAttendeeController@status | rides.attendee.status |
+| GET | /notifications | NotificationController@index | notifications.index |
+| POST | /notifications/{notification}/read | NotificationController@markAsRead | notifications.read |
+| POST | /notifications/read-all | NotificationController@markAllAsRead | notifications.read-all |
+| POST | /api/routes/parse-gpx | GpxController@parse | api.routes.parse-gpx |
 
 ## Frontend Components
 
@@ -151,9 +165,12 @@ Ride Created (v1) → Users Join (stored with v1)
 - `layouts.map` - Full-screen map layout for /routes/map
 
 ### Alpine.js Components
-- `route-filters` - Filter sidebar (distance, elevation, difficulty, features)
+- `route-filters` - Route filter sidebar (distance, elevation, difficulty, features); all features selected by default
 - `route-map` - Leaflet map with route layers, feature markers
+- `route-map` (single) / `routeMap` - Ride detail map rendering route geometry and meeting-point marker
 - `elevation-chart` - Chart.js elevation profile
+- `meeting-point-picker` - Click-to-set meeting point with Nominatim reverse geocoding (name lookup only fills an empty field)
+- `route-select` - Create-ride route dropdown that seeds the meeting point from the route start
 - `ride-join` - Join/leave button with version awareness
 - `notification-bell` - In-app notification dropdown
 
@@ -163,14 +180,16 @@ Ride Created (v1) → Users Join (stored with v1)
 - Markers: Feature points (icons by type), meeting points
 - Popup: Route summary on click
 
-## Background Jobs
+## Notifications & Scheduling
 
-| Job | Trigger | Purpose |
-|-----|---------|---------|
-| ProcessGpxUpload | Route stored | Parse GPX, compute stats, generate geometry |
-| NotifyRideChanged | Ride updated | Email/in-app to attendees when version increments |
-| RideReminder | Scheduled (daily) | Notify attendees 24h before ride |
-| GenerateRoutePreview | Route created | Create static map image for social sharing |
+| Notification | Trigger | Purpose |
+|--------------|---------|---------|
+| RideJoined | Attendee joins | Notify the ride organizer |
+| RideChanged | Ride updated | Notify attendees when route/date version increments |
+| NewComment / CommentReply | Comment posted | Notify route owner / parent commenter |
+| RideReminder | Scheduled (daily) | Notify attendees 24h before a ride |
+
+Notifications are delivered in-app and processed through the database queue (`QUEUE_CONNECTION=database`). GPX parsing is performed synchronously by the `GpxParser` service.
 
 ## Security Considerations
 
@@ -186,17 +205,16 @@ Ride Created (v1) → Users Join (stored with v1)
 - Eager loading relationships (with() on queries)
 - Database indexes on all foreign keys and filter columns
 - PostGIS spatial index for "nearby routes" queries
-- Redis caching for route list with filters (TTL 5 min)
+- Database cache for route list with filters
 - Pagination (15 per page) on all list views
-- Queue long-running tasks (GPX parsing, notifications)
+- Queue notifications so requests stay responsive
 
 ## Deployment Requirements
 
-- PHP 8.2+
-- PostgreSQL 15+ with PostGIS 3.4+
-- Redis 7+
+- PHP 8.3+
+- PostgreSQL 16+ with PostGIS 3.4+
 - Composer 2+
-- Node.js 20+ (for Vite asset compilation)
+- Node.js 18 (for Vite 5 asset compilation)
 - Web server: Nginx + PHP-FPM or Apache + mod_php
 - SSL certificate (Let's Encrypt recommended)
 

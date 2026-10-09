@@ -7,7 +7,7 @@ Laravel web app for cyclists to share GPX routes, discover rides, and coordinate
 - **Backend**: Laravel 13 (PHP 8.3), PostgreSQL 16 + PostGIS
 - **Frontend**: Blade + Alpine.js + Leaflet.js (OpenStreetMap) + Chart.js, built with Vite 5 / Tailwind CSS 3
 - **Auth**: Laravel Breeze (blade stack)
-- **Tests**: PHPUnit / Pest
+- **Tests**: PHPUnit
 - **License**: GPL-3.0
 
 ## Environment

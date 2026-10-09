@@ -9,25 +9,26 @@ A Laravel web application for cyclists to share routes, discover rides, and coor
 - **Feature Marking** - Tag routes with checkboxes (gravel, steep, scenic, technical, etc.)
 - **Social Features** - Rate routes (1-5 stars), threaded comments
 - **Group Ride Coordination** - Create rides, join/leave, automatic attendee clearing when route/date changes
+- **Group Ride Discovery** - Group Rides is the default landing page; filter by status (upcoming/past/all) and date range, defaulting to upcoming rides
+- **Meeting Point Picker** - Click the map to set a ride meeting point, with reverse-geocoded place names
 - **In-App Notifications** - Ride changes, comments, reminders
 
 ## Tech Stack
 
-- **Backend**: Laravel 11, PHP 8.2+
-- **Database**: PostgreSQL 15+ with PostGIS 3.4+
-- **Frontend**: Blade templates + Alpine.js 3
+- **Backend**: Laravel 13, PHP 8.3+
+- **Database**: PostgreSQL 16+ with PostGIS 3.4+
+- **Frontend**: Blade templates + Alpine.js 3, built with Vite 5 / Tailwind CSS 3
 - **Maps**: Leaflet.js + OpenStreetMap tiles
 - **Charts**: Chart.js for elevation profiles
-- **Queue**: Redis + Laravel Horizon
-- **Auth**: Laravel Breeze
+- **Queue**: database queue driver (notifications/reminders)
+- **Auth**: Laravel Breeze (blade stack)
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Composer 2+
-- PostgreSQL 15+ with PostGIS extension
-- Redis 7+
-- Node.js 20+ (for Vite)
+- PostgreSQL 16+ with PostGIS extension
+- Node.js 18 (Vite is pinned to Vite 5)
 
 ## Installation
 
@@ -45,9 +46,8 @@ npm install
 # Copy environment file
 cp .env.example .env
 
-# Configure .env with your database/Redis credentials
+# Configure .env with your PostgreSQL credentials
 # Required: DB_CONNECTION=pgsql, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
-# Required: REDIS_HOST, REDIS_PASSWORD (if applicable)
 
 # Generate app key
 php artisan key:generate
@@ -61,8 +61,8 @@ npm run build
 # Start development server
 php artisan serve
 
-# In separate terminal: start queue worker
-php artisan horizon
+# In separate terminal: process queued jobs (notifications)
+php artisan queue:work
 ```
 
 ## Database Setup
@@ -151,17 +151,13 @@ DB_PASSWORD=your_secure_password
 ## Development
 
 ```bash
-# Start all services
-php artisan serve          # Laravel on http://localhost:8000
+# Start services
+php artisan serve          # Laravel dev server
 npm run dev                # Vite HMR
-php artisan horizon        # Queue dashboard on /horizon
-php artisan reverb:start   # WebSockets (if using broadcasting)
+php artisan queue:work     # Process queued notifications
 
 # Run tests
-./vendor/bin/pest
-
-# Static analysis
-./vendor/bin/phpstan analyse
+php artisan test
 
 # Code formatting
 ./vendor/bin/pint
@@ -171,18 +167,17 @@ php artisan reverb:start   # WebSockets (if using broadcasting)
 
 ```
 app/
-├── Http/Controllers/       # Route, Ride, Rating, Comment, Feature controllers
+├── Http/Controllers/       # Route, Ride, Rating, Comment, Feature, Attendee controllers
 ├── Models/                 # Eloquent models with relationships
 ├── Policies/               # Authorization policies
-├── Services/               # GpxParser, RideVersionManager
-├── Jobs/                   # ProcessGpxUpload, NotifyRideChanged
-└── Notifications/          # RideChanged, NewComment, RideReminder
+├── Services/               # GpxParser
+└── Notifications/          # RideChanged, NewComment, RideReminder, RideJoined
 
 resources/
 ├── views/
 │   ├── routes/             # index, map, create, show, edit
-│   ├── rides/              # index, show, create
-│   ├── components/         # Alpine components, map, charts
+│   ├── rides/              # index, show, create, edit
+│   ├── components/         # map sidebar, map, charts
 │   └── layouts/            # app, map
 ├── js/                     # Alpine components, Leaflet init
 └── css/                    # Tailwind + custom styles
@@ -202,6 +197,12 @@ routes/
 Predefined types: `gravel`, `steep`, `technical`, `scenic`, `road`, `water`, `cafe`, `shop`, `custom`
 Stored as `route_features` rows, filterable in route list.
 
+### Landing Page & Navigation
+`/` and `/dashboard` both redirect to the Group Rides list (`/rides`). The app logo also links there.
+
+### Group Ride Filtering
+`/rides` filters via query params: `status` (`upcoming` default, `past`, `all`), plus optional `from` / `to` date bounds. Results are paginated and the query string is preserved.
+
 ### Group Ride Versioning
 When organizer changes **route** or **date**:
 1. `group_rides.version` increments
@@ -209,7 +210,7 @@ When organizer changes **route** or **date**:
 3. Notifications sent to removed attendees to re-confirm
 
 ### GPX Processing
-Async job parses GPX → extracts track points → computes distance/elevation → stores PostGIS LINESTRING + JSONB.
+`GpxParser` parses GPX synchronously on upload → extracts track points → computes distance/elevation → stores PostGIS LINESTRING + JSONB.
 
 ## Environment Variables
 
@@ -220,7 +221,8 @@ Async job parses GPX → extracts track points → computes distance/elevation �
 | `DB_HOST` | Database host | `127.0.0.1` |
 | `DB_PORT` | Database port | `5432` |
 | `DB_DATABASE` | Database name | `routes` |
-| `REDIS_HOST` | Redis host | `127.0.0.1` |
+| `QUEUE_CONNECTION` | Queue driver | `database` |
+| `CACHE_STORE` | Cache driver | `database` |
 | `MAP_TILE_URL` | Tile server URL | OSM default |
 
 ## License

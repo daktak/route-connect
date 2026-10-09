@@ -1,6 +1,6 @@
 <div class="space-y-2">
     <template x-for="route in routes" :key="route.id">
-        <button @click="selectRoute(route)" class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-transparent transition-colors" :class="{ 'bg-primary/10 border-primary': selectedRoute && selectedRoute.id === route.id }">
+        <button @click="window.location.href = '/routes/' + route.id" class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-transparent transition-colors" :class="{ 'bg-primary/10 border-primary': selectedRoute && selectedRoute.id === route.id }">
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full flex-shrink-0" :style="'background-color: ' + getDifficultyColor(route.difficulty)"></span>
                 <span class="flex-1 text-sm font-medium text-gray-900 truncate" x-text="route.name"></span>

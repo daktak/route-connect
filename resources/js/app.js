@@ -51,39 +51,63 @@ Alpine.data('routeFilters', () => ({
         Object.keys(this.filters).forEach(key => {
             const value = params.get(key);
             if (value) {
-                if (key === 'features') {
-                    this.filters[key] = value.split(',');
-                } else {
-                    this.filters[key] = value;
-                }
+                this.filters[key] = key === 'features' ? value.split(',') : value;
             }
         });
 
-        this.$watch('filters', () => this.updateUrl(), { deep: true });
+        // All features ticked by default (== no feature filter)
+        if (this.filters.features.length === 0) {
+            this.filters.features = this.availableFeatures.map(f => f.value);
+        }
+
+        this.$watch('filters', () => this.applyFilters(), { deep: true });
     },
 
-    updateUrl() {
+    applyFilters() {
         const params = new URLSearchParams();
+        const allFeatures = this.availableFeatures.map(f => f.value);
+
         Object.entries(this.filters).forEach(([key, value]) => {
-            if (value && (Array.isArray(value) ? value.length : value)) {
-                params.set(key, Array.isArray(value) ? value.join(',') : value);
+            if (key === 'features') {
+                if (Array.isArray(value) && value.length > 0 && value.length < allFeatures.length) {
+                    params.set(key, value.join(','));
+                }
+                return;
+            }
+            if (value !== '' && value !== null && value !== undefined) {
+                if (key === 'sort' && value === 'newest') {
+                    return;
+                }
+                params.set(key, value);
             }
         });
-        const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-        window.history.replaceState({}, '', newUrl);
-        this.$dispatch('filters-changed', { filters: this.filters });
+
+        const qs = params.toString();
+        const newUrl = `${window.location.pathname}${qs ? '?' + qs : ''}`;
+        const currentUrl = window.location.pathname + window.location.search;
+
+        if (newUrl !== currentUrl) {
+            window.location.href = newUrl;
+        }
     },
 
     clearFilters() {
         Object.keys(this.filters).forEach(key => {
-            this.filters[key] = Array.isArray(this.filters[key]) ? [] : '';
+            this.filters[key] = Array.isArray(this.filters[key])
+                ? this.availableFeatures.map(f => f.value)
+                : (key === 'sort' ? 'newest' : '');
         });
     },
 
     hasActiveFilters() {
-        return Object.values(this.filters).some(v =>
-            Array.isArray(v) ? v.length > 0 : v !== ''
-        );
+        const otherActive = Object.entries(this.filters)
+            .filter(([key, value]) => key !== 'features')
+            .some(([, value]) => value !== '');
+
+        const featureFilterActive = this.filters.features.length > 0
+            && this.filters.features.length < this.availableFeatures.length;
+
+        return otherActive || featureFilterActive;
     },
 
     toggleFeature(feature) {

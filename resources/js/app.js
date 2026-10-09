@@ -896,6 +896,7 @@ Alpine.data('meetingPointPicker', () => ({
     lat: null,
     lng: null,
     searching: false,
+    resolvingName: false,
     map: null,
     markerLayer: null,
 
@@ -933,6 +934,44 @@ Alpine.data('meetingPointPicker', () => ({
         if (recenter) {
             this.map.setView([lat, lng], 15);
         }
+        this.resolveName();
+    },
+
+    async resolveName() {
+        if (this.name || !this.lat || !this.lng) return;
+
+        const lat = this.lat;
+        const lng = this.lng;
+        this.resolvingName = true;
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`);
+            const data = await response.json();
+
+            if (this.name || this.lat !== lat || this.lng !== lng) return;
+
+            this.name = this.formatPlaceName(data);
+        } catch (e) {
+            console.error('Reverse geocoding failed', e);
+        } finally {
+            this.resolvingName = false;
+        }
+    },
+
+    formatPlaceName(data) {
+        if (!data) return '';
+
+        const address = data.address || {};
+        const parts = [
+            data.name,
+            address.amenity || address.building || address.leisure || address.tourism,
+            address.road,
+            address.suburb || address.neighbourhood || address.village || address.town || address.city,
+        ].filter(Boolean);
+
+        const unique = [...new Set(parts)];
+
+        return unique.slice(0, 3).join(', ') || data.display_name || '';
     },
 
     async search() {

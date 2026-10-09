@@ -69,6 +69,7 @@
                             <input type="hidden" name="meeting_point_lng" :value="lng">
                             <div x-show="lat && lng" x-cloak class="text-sm text-gray-500">
                                 Selected: <span x-text="lat ? lat.toFixed(6) : ''"></span>, <span x-text="lng ? lng.toFixed(6) : ''"></span>
+                                <span x-show="resolvingName" class="text-gray-400">• resolving name…</span>
                             </div>
                             <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-ref="map"></div>
                             <p class="text-xs text-gray-400">Click on the map to set the meeting point.</p>

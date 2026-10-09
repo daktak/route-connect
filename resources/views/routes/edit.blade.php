@@ -123,11 +123,7 @@
             <div class="bg-red-50 border border-red-200 rounded-lg p-6">
                 <h3 class="text-lg font-semibold text-red-900 mb-2">Danger Zone</h3>
                 <p class="text-red-700 mb-4">Deleting this route will permanently remove it along with all ratings, comments, and associated group rides.</p>
-                <form method="POST" action="{{ route('routes.destroy', $route) }}" onsubmit="return confirm('Are you sure you want to delete this route? This cannot be undone.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">Delete Route</button>
-                </form>
+                <button type="submit" form="delete-route-form" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">Delete Route</button>
             </div>
 
             <!-- Submit -->
@@ -135,6 +131,11 @@
                 <a href="{{ route('routes.show', $route) }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</a>
                 <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors">Save Changes</button>
             </div>
+        </form>
+
+        <form id="delete-route-form" method="POST" action="{{ route('routes.destroy', $route) }}" onsubmit="return confirm('Are you sure you want to delete this route? This cannot be undone.')" class="hidden">
+            @csrf
+            @method('DELETE')
         </form>
     </div>
 

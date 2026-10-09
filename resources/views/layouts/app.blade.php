@@ -18,6 +18,30 @@
         <div class="min-h-screen bg-gray-50 flex flex-col">
             @include('layouts.navigation')
 
+            @if (session('success'))
+                <div id="flash-success" class="bg-green-50 border-b border-green-200">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+                        <p class="text-green-800 text-sm font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            {{ session('success') }}
+                        </p>
+                        <button type="button" onclick="this.closest('#flash-success').remove()" class="text-green-700 hover:text-green-900 text-sm font-medium flex-shrink-0">Dismiss</button>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div id="flash-error" class="bg-red-50 border-b border-red-200">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+                        <p class="text-red-800 text-sm font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            {{ session('error') }}
+                        </p>
+                        <button type="button" onclick="this.closest('#flash-error').remove()" class="text-red-700 hover:text-red-900 text-sm font-medium flex-shrink-0">Dismiss</button>
+                    </div>
+                </div>
+            @endif
+
             <!-- Page Heading -->
             @isset($header)
                 <header class="bg-white shadow-sm">

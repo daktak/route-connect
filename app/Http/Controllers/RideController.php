@@ -15,17 +15,37 @@ class RideController extends Controller
 {
     public function index(Request $request)
     {
-        $upcomingRides = GroupRide::upcoming()
-            ->with(['route', 'organizer', 'attendees.user'])
-            ->withCount('attendees')
-            ->paginate(15, ['*'], 'upcoming');
+        $status = $request->get('status', 'upcoming');
+        if (! in_array($status, ['upcoming', 'past', 'all'], true)) {
+            $status = 'upcoming';
+        }
 
-        $pastRides = GroupRide::past()
-            ->with(['route', 'organizer', 'attendees.user'])
-            ->withCount('attendees')
-            ->paginate(15, ['*'], 'past');
+        $query = GroupRide::with(['route', 'organizer', 'attendees.user'])
+            ->withCount('attendees');
 
-        return view('rides.index', compact('upcomingRides', 'pastRides'));
+        if ($status === 'upcoming') {
+            $query->upcoming();
+        } elseif ($status === 'past') {
+            $query->past();
+        } else {
+            $query->orderBy('ride_date');
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('ride_date', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('ride_date', '<=', $request->date('to'));
+        }
+
+        $rides = $query->paginate(15)->withQueryString();
+
+        return view('rides.index', [
+            'rides' => $rides,
+            'status' => $status,
+            'from' => $request->get('from'),
+            'to' => $request->get('to'),
+        ]);
     }
 
     public function create()

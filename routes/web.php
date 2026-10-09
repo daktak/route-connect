@@ -11,14 +11,14 @@ use App\Http\Controllers\RideController;
 use App\Http\Controllers\RouteController;
 use Illuminate\Support\Facades\Route;
 
-// Home redirects to routes
+// Home redirects to group rides
 Route::get('/', function () {
-    return redirect()->route('routes.index');
+    return redirect()->route('rides.index');
 });
 
 // Breeze posts-auth redirect target
 Route::get('/dashboard', function () {
-    return redirect()->route('routes.index');
+    return redirect()->route('rides.index');
 })->name('dashboard');
 
 // Routes

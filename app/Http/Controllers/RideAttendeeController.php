@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GroupRide;
 use App\Models\RideAttendee;
+use App\Notifications\RideJoined;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +15,7 @@ class RideAttendeeController extends Controller
         $ride->load('attendees');
 
         // Check if ride is full
-        if ($ride->max_participants && $ride->confirmedAttendees()->count() >= $ride->max_participants) {
+        if ($ride->max_participants && $ride->confirmedAttendees()->where('ride_version', $ride->version)->count() >= $ride->max_participants) {
             return response()->json([
                 'success' => false,
                 'message' => 'This ride is full.',
@@ -51,8 +52,8 @@ class RideAttendeeController extends Controller
         ]);
 
         // Notify organizer
-        if ($ride->organizer_id !== Auth::id()) {
-            // Notification logic
+        if ($ride->organizer_id !== Auth::id() && $ride->organizer) {
+            $ride->organizer->notify(new RideJoined($ride, Auth::user()));
         }
 
         return response()->json([

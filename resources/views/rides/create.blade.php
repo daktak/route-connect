@@ -35,17 +35,6 @@
                 @error('route_id')
                     <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
                 @enderror
-
-                @if(old('route_id'))
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg" x-data="routeMap" x-init="
-                        initMap();
-                        if (routeGeometry) {
-                            const color = getDifficultyColor(difficulty);
-                            L.geoJSON(routeGeometry, { style: { color, weight: 4, opacity: 0.9 } }).addTo(routesLayer);
-                            map.fitBounds(routesLayer.getBounds(), { padding: [20, 20] });
-                        }
-                    " :route-geometry="@json($selectedRoute->geometry ?? null)" :difficulty="{{ $selectedRoute->difficulty ?? 'moderate' }}"></div>
-                @endif
             </div>
 
             <!-- Ride Details -->
@@ -68,30 +57,21 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Meeting Point</label>
-                        <div x-data="{ lat: null, lng: null, searching: false }" class="space-y-3">
+                        <div x-data="meetingPointPicker" class="space-y-3">
                             <div class="flex gap-2">
-                                <input type="text" name="meeting_point_name" value="{{ old('meeting_point_name') }}" placeholder="Search or enter meeting point name..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                <button type="button" @click="searchLocation()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" :disabled="searching">
+                                <input type="text" name="meeting_point_name" x-model="name" placeholder="Search or enter meeting point name..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <button type="button" @click="search()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" :disabled="searching">
                                     <span x-show="!searching">Search</span>
-                                    <span x-show="searching">Searching...</span>
+                                    <span x-show="searching" x-cloak>Searching...</span>
                                 </button>
                             </div>
                             <input type="hidden" name="meeting_point_lat" :value="lat">
                             <input type="hidden" name="meeting_point_lng" :value="lng">
-                            <div x-show="lat && lng" class="text-sm text-gray-500">Selected: {{ lat.toFixed(6) }}, {{ lng.toFixed(6) }}</div>
-                            <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-data="routeMap" x-init="
-                                initMap();
-                                if (lat && lng) {
-                                    map.setView([lat, lng], 15);
-                                    L.marker([lat, lng]).addTo(map);
-                                }
-                                map.on('click', e => {
-                                    lat = e.latlng.lat;
-                                    lng = e.latlng.lng;
-                                    this.$dispatch('location-selected', { lat, lng });
-                                });
-                            ">
+                            <div x-show="lat && lng" x-cloak class="text-sm text-gray-500">
+                                Selected: <span x-text="lat ? lat.toFixed(6) : ''"></span>, <span x-text="lng ? lng.toFixed(6) : ''"></span>
                             </div>
+                            <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-ref="map"></div>
+                            <p class="text-xs text-gray-400">Click on the map to set the meeting point.</p>
                         </div>
                     </div>
 
@@ -115,61 +95,4 @@
             </div>
         </form>
     </div>
-
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('rideCreateMap', () => ({
-                lat: null,
-                lng: null,
-                searching: false,
-                map: null,
-                marker: null,
-
-                init() {
-                    this.map = L.map(this.$el, { zoomControl: true }).setView([47.0, 8.0], 8);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.map);
-
-                    this.map.on('click', (e) => {
-                        this.lat = e.latlng.lat;
-                        this.lng = e.latlng.lng;
-                        this.updateMarker();
-                        this.$dispatch('location-selected', { lat: this.lat, lng: this.lng });
-                    });
-
-                    this.$watch('lat', () => {
-                        this.$el.querySelector('input[name="meeting_point_lat"]').value = this.lat;
-                    });
-                    this.$watch('lng', () => {
-                        this.$el.querySelector('input[name="meeting_point_lng"]').value = this.lng;
-                    });
-                },
-
-                async searchLocation() {
-                    this.searching = true;
-                    const query = this.$el.querySelector('input[name="meeting_point_name"]').value;
-                    if (!query) { this.searching = false; return; }
-
-                    try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
-                        const results = await response.json();
-                        if (results.length > 0) {
-                            this.lat = parseFloat(results[0].lat);
-                            this.lng = parseFloat(results[0].lon);
-                            this.updateMarker();
-                            this.map.setView([this.lat, this.lng], 15);
-                        }
-                    } catch (e) {
-                        console.error('Geocoding failed', e);
-                    } finally {
-                        this.searching = false;
-                    }
-                },
-
-                updateMarker() {
-                    if (this.marker) this.map.removeLayer(this.marker);
-                    this.marker = L.marker([this.lat, this.lng]).addTo(this.map);
-                },
-            }));
-        });
-    </script>
-</x-layouts.app>
+</x-app-layout>

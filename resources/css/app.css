@@ -9,6 +9,9 @@
     body {
         @apply font-sans antialiased;
     }
+    [x-cloak] {
+        display: none !important;
+    }
 }
 
 @layer utilities {

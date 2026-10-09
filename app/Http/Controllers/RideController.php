@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GroupRide;
 use App\Models\RideAttendee;
 use App\Models\Route;
+use App\Notifications\RideChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class RideController extends Controller
     {
         $routes = Route::public()
             ->orderBy('name')
-            ->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty']);
+            ->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty', 'gpx_data']);
 
         return view('rides.create', compact('routes'));
     }
@@ -115,7 +116,18 @@ class RideController extends Controller
         $criticalChanged = $ride->route_id !== $request->route_id
             || $ride->ride_date->ne($request->ride_date);
 
-        DB::transaction(function () use ($request, $ride, $criticalChanged) {
+        $newVersion = $criticalChanged ? $ride->version + 1 : $ride->version;
+
+        // Capture current attendees before the version-change trigger removes them.
+        $removedAttendees = $criticalChanged
+            ? $ride->attendees()
+                ->where('ride_version', '<', $newVersion)
+                ->where('user_id', '!=', $ride->organizer_id)
+                ->with('user')
+                ->get()
+            : collect();
+
+        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees) {
             $ride->update([
                 'route_id' => $request->route_id,
                 'title' => $request->title,
@@ -126,18 +138,21 @@ class RideController extends Controller
                 'max_participants' => $request->max_participants,
                 'description' => $request->description,
                 'status' => $request->status,
-                'version' => $criticalChanged ? $ride->version + 1 : $ride->version,
+                'version' => $newVersion,
             ]);
 
             if ($criticalChanged) {
-                // Notify removed attendees
-                $removed = $ride->attendees()
-                    ->where('ride_version', '<', $ride->version)
-                    ->with('user')
-                    ->get();
+                // Keep the organizer confirmed on the new version.
+                $ride->attendees()->updateOrCreate(
+                    ['user_id' => $ride->organizer_id, 'ride_version' => $newVersion],
+                    ['status' => 'confirmed']
+                );
 
-                foreach ($removed as $attendee) {
-                    // Notification logic here
+                foreach ($removedAttendees as $attendee) {
+                    $attendee->user?->notify(new RideChanged(
+                        $ride,
+                        'The route or date for this ride changed. Please confirm your attendance again.'
+                    ));
                 }
             }
         });

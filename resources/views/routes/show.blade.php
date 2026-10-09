@@ -20,17 +20,7 @@
                 <!-- Map & Elevation -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="route-map" class="absolute inset-0" x-data="routeMap" x-init="
-                            initMap();
-                            if (routeGeometry) {
-                                const color = getDifficultyColor(difficulty);
-                                L.geoJSON(routeGeometry, { style: { color, weight: 4, opacity: 0.9 } }).addTo(routesLayer);
-                                map.fitBounds(routesLayer.getBounds(), { padding: [20, 20] });
-                            }
-                            @if($route->features->count())
-                                features.forEach(f => addFeatureMarker(f));
-                            @endif
-                        " :route-geometry="@json($route->geometry)" :difficulty="{{ $route->difficulty }}" :features="@json($route->features->map(fn($f) => ['id' => $f->id, 'feature_type' => $f->feature_type, 'description' => $f->description, 'start_lat' => $f->start_lat, 'start_lng' => $f->start_lng, 'label' => $f->label, 'icon' => $f->icon]))->toArray()"></div>
+                        <div id="route-map" class="absolute inset-0" x-data="singleRouteMap" :geometry="@json($geometry)" :difficulty="@json($route->difficulty)" :features="@json($featuresData)"></div>
                     </div>
                 </div>
 
@@ -38,7 +28,7 @@
                 @if($route->gpx_data['tracks'][0]['segments'][0] ?? false)
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Elevation Profile</h3>
-                        <div class="elevation-chart" x-data="elevationChart" :data="@json($route->elevationProfile ?? [])"></div>
+                        <div class="elevation-chart" x-data="elevationChart" :data="@json($elevationProfile)"></div>
                         <div class="mt-4 grid grid-cols-3 gap-4 text-sm text-gray-600">
                             <div class="text-center">
                                 <div class="font-semibold text-gray-900">{{ $route->distance_km }} km</div>
@@ -318,4 +308,4 @@
             });
         });
     </script>
-</x-layouts.app>
+</x-app-layout>

@@ -400,7 +400,7 @@ Alpine.data('notificationBell', () => ({
 
     async fetchNotifications() {
         try {
-            const response = await fetch('/api/notifications');
+            const response = await fetch('/notifications', { headers: { Accept: 'application/json' } });
             const data = await response.json();
             this.notifications = data.notifications;
             this.unreadCount = data.unread_count;
@@ -411,7 +411,13 @@ Alpine.data('notificationBell', () => ({
 
     async markAsRead(id) {
         try {
-            await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+            await fetch(`/notifications/${id}/read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    Accept: 'application/json',
+                },
+            });
             const notif = this.notifications.find(n => n.id === id);
             if (notif) notif.read_at = new Date().toISOString();
             this.unreadCount = Math.max(0, this.unreadCount - 1);
@@ -422,7 +428,13 @@ Alpine.data('notificationBell', () => ({
 
     async markAllAsRead() {
         try {
-            await fetch('/api/notifications/read-all', { method: 'POST' });
+            await fetch('/notifications/read-all', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    Accept: 'application/json',
+                },
+            });
             this.notifications.forEach(n => n.read_at = new Date().toISOString());
             this.unreadCount = 0;
         } catch (e) {
@@ -443,11 +455,193 @@ Alpine.data('notificationBell', () => ({
 }));
 
 // GPX Upload Preview
+Alpine.data('routePreviewMap', () => ({
+    map: null,
+    layer: null,
+    geometry: null,
+
+    init() {
+        this.map = L.map(this.$el, {
+            zoomControl: true,
+            scrollWheelZoom: false,
+        }).setView([47.0, 8.0], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(this.map);
+
+        this.layer = L.layerGroup().addTo(this.map);
+        this.$watch('geometry', () => this.render());
+        this.render();
+    },
+
+    render() {
+        this.layer.clearLayers();
+        if (!this.geometry) return;
+
+        const geojson = typeof this.geometry === 'string' ? JSON.parse(this.geometry) : this.geometry;
+        L.geoJSON(geojson, {
+            style: { color: '#2563eb', weight: 4, opacity: 0.9 },
+        }).addTo(this.layer);
+
+        if (this.layer.getLayers().length > 0) {
+            this.map.fitBounds(this.layer.getBounds(), { padding: [20, 20] });
+        }
+    },
+}));
+
+Alpine.data('singleRouteMap', () => ({
+    map: null,
+    routeLayer: null,
+    featuresLayer: null,
+    geometry: null,
+    difficulty: 'moderate',
+    features: [],
+
+    init() {
+        this.map = L.map(this.$el, {
+            zoomControl: true,
+            scrollWheelZoom: false,
+        }).setView([47.0, 8.0], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(this.map);
+
+        this.routeLayer = L.layerGroup().addTo(this.map);
+        this.featuresLayer = L.layerGroup().addTo(this.map);
+
+        this.$watch('geometry', () => this.renderRoute());
+        this.$watch('features', () => this.renderFeatures());
+        this.renderRoute();
+        this.renderFeatures();
+    },
+
+    renderRoute() {
+        this.routeLayer.clearLayers();
+        if (!this.geometry) return;
+
+        const geojson = typeof this.geometry === 'string' ? JSON.parse(this.geometry) : this.geometry;
+        const color = this.getDifficultyColor(this.difficulty);
+        L.geoJSON(geojson, {
+            style: { color, weight: 4, opacity: 0.9 },
+        }).addTo(this.routeLayer);
+
+        if (this.routeLayer.getLayers().length > 0) {
+            this.map.fitBounds(this.routeLayer.getBounds(), { padding: [20, 20] });
+        }
+    },
+
+    renderFeatures() {
+        this.featuresLayer.clearLayers();
+        if (!this.features || !this.features.length) return;
+
+        this.features.forEach((feature) => this.addFeatureMarker(feature));
+    },
+
+    getDifficultyColor(difficulty) {
+        const colors = {
+            easy: '#16a34a',
+            moderate: '#f59e0b',
+            hard: '#ea580c',
+            expert: '#dc2626',
+        };
+        return colors[difficulty] || '#2563eb';
+    },
+
+    getFeatureIcon(type) {
+        const icons = {
+            gravel: '🪨',
+            steep: '📈',
+            technical: '🚵',
+            scenic: '🌄',
+            water: '💧',
+            cafe: '☕',
+            shop: '🔧',
+        };
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="text-2xl">${icons[type] || '📍'}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+        });
+    },
+
+    addFeatureMarker(feature) {
+        if (!feature.start_lat || !feature.start_lng) return;
+
+        const icon = this.getFeatureIcon(feature.feature_type);
+        L.marker([feature.start_lat, feature.start_lng], { icon })
+            .bindPopup(`<strong>${feature.label || feature.feature_type}</strong><br>${feature.description || ''}`)
+            .addTo(this.featuresLayer);
+    },
+}));
+
+Alpine.data('meetingPointPicker', () => ({
+    name: '',
+    lat: null,
+    lng: null,
+    searching: false,
+    map: null,
+    markerLayer: null,
+
+    init() {
+        this.map = L.map(this.$refs.map, {
+            zoomControl: true,
+            scrollWheelZoom: false,
+        }).setView([47.0, 8.0], 8);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+        }).addTo(this.map);
+
+        this.markerLayer = L.layerGroup().addTo(this.map);
+
+        this.map.on('click', (e) => this.setLocation(e.latlng.lat, e.latlng.lng));
+
+        if (this.lat && this.lng) {
+            this.setLocation(this.lat, this.lng, false);
+        }
+    },
+
+    setLocation(lat, lng, recenter = true) {
+        this.lat = lat;
+        this.lng = lng;
+        this.markerLayer.clearLayers();
+        L.marker([lat, lng]).addTo(this.markerLayer);
+        if (recenter) {
+            this.map.setView([lat, lng], 15);
+        }
+    },
+
+    async search() {
+        if (!this.name) return;
+
+        this.searching = true;
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.name)}&limit=1`);
+            const results = await response.json();
+            if (results.length > 0) {
+                this.setLocation(parseFloat(results[0].lat), parseFloat(results[0].lon));
+            }
+        } catch (e) {
+            console.error('Geocoding failed', e);
+        } finally {
+            this.searching = false;
+        }
+    },
+}));
+
 Alpine.data('gpxUpload', () => ({
     file: null,
     preview: null,
     parsing: false,
     error: null,
+    customFeature: '',
+    customFeatures: [],
 
     async handleFile(event) {
         const file = event.target.files[0];
@@ -489,7 +683,19 @@ Alpine.data('gpxUpload', () => ({
         this.file = null;
         this.preview = null;
         this.error = null;
+        this.customFeatures = [];
+        this.customFeature = '';
         this.$refs.fileInput.value = '';
+    },
+
+    addCustomFeature() {
+        const value = this.customFeature.trim();
+        if (!value) return;
+
+        if (!this.customFeatures.includes(value)) {
+            this.customFeatures.push(value);
+        }
+        this.customFeature = '';
     },
 }));
 

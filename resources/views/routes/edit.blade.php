@@ -152,4 +152,4 @@
             input.value = '';
         }
     </script>
-</x-layouts.app>
+</x-app-layout>

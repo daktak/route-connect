@@ -52,13 +52,14 @@ class GroupRide extends Model
     {
         return $this->hasMany(RideAttendee::class)
             ->where('status', 'confirmed')
-            ->where('ride_version', $this->version)
             ->with('user');
     }
 
     public function getAttendeesCountAttribute(): int
     {
-        return $this->confirmedAttendees()->count();
+        return $this->confirmedAttendees()
+            ->where('ride_version', $this->version)
+            ->count();
     }
 
     public function getIsFullAttribute(): bool

@@ -4,6 +4,8 @@ namespace App\Services;
 
 class GpxParser
 {
+    private const DEFAULT_NAMESPACE = 'http://www.topografix.com/GPX/1/1';
+
     public function parse(string $gpxContent): array
     {
         $xml = simplexml_load_string($gpxContent);
@@ -12,23 +14,23 @@ class GpxParser
             throw new \InvalidArgumentException('Invalid GPX file');
         }
 
-        // Register namespaces
+        // Register namespaces (support both GPX 1.0 and 1.1 default namespaces)
         $namespaces = $xml->getNamespaces(true);
-        $xml->registerXPathNamespace('gpx', 'http://www.topografix.com/GPX/1/1');
+        $namespace = $namespaces[''] ?? $namespaces['gpx'] ?? self::DEFAULT_NAMESPACE;
 
         $tracks = [];
         $waypoints = [];
         $bounds = ['min_lat' => 90, 'max_lat' => -90, 'min_lng' => 180, 'max_lng' => -180];
 
         // Parse tracks
-        foreach ($xml->xpath('//gpx:trk') as $trk) {
+        foreach ($this->xpath($xml, 'trk', $namespace) as $trk) {
             $trackName = (string) ($trk->name ?? 'Track');
             $segments = [];
 
-            foreach ($trk->xpath('gpx:trkseg') as $trkseg) {
+            foreach ($this->xpath($trk, 'trkseg', $namespace) as $trkseg) {
                 $points = [];
 
-                foreach ($trkseg->xpath('gpx:trkpt') as $trkpt) {
+                foreach ($this->xpath($trkseg, 'trkpt', $namespace) as $trkpt) {
                     $lat = (float) $trkpt['lat'];
                     $lon = (float) $trkpt['lon'];
                     $ele = (float) ($trkpt->ele ?? 0);
@@ -58,7 +60,7 @@ class GpxParser
         }
 
         // Parse waypoints
-        foreach ($xml->xpath('//gpx:wpt') as $wpt) {
+        foreach ($this->xpath($xml, 'wpt', $namespace) as $wpt) {
             $lat = (float) $wpt['lat'];
             $lon = (float) $wpt['lon'];
             $name = (string) ($wpt->name ?? '');
@@ -112,6 +114,13 @@ class GpxParser
             'difficulty' => $difficulty,
             'name' => $tracks[0]['name'] ?? 'Untitled Route',
         ];
+    }
+
+    private function xpath(\SimpleXMLElement $element, string $path, string $namespace): array
+    {
+        $element->registerXPathNamespace('gpx', $namespace);
+
+        return $element->xpath("gpx:{$path}") ?: [];
     }
 
     private function calculateDistance(array $points): float

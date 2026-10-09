@@ -19,7 +19,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="h-[calc(100vh-14rem)] relative" style="min-height: 600px;">
             <!-- Map Container -->
-            <div id="map" class="absolute inset-0" x-data="routeMap" x-init="initMap()" :routes="routes"></div>
+            <div id="map" class="absolute inset-0" x-data="routeMap" x-init="initMap()" :routes='@json($mapRoutes)'></div>
 
             <!-- Sidebar Toggle (Mobile) -->
             <button @click="sidebarOpen = !sidebarOpen" class="fixed bottom-4 left-4 z-30 bg-white shadow-lg rounded-full p-3 md:hidden" aria-label="Toggle filters">

@@ -28,7 +28,6 @@ class Route extends Model
 
     protected $casts = [
         'gpx_data' => 'array',
-        'geometry' => 'json',
         'distance_km' => 'decimal:2',
         'elevation_gain_m' => 'integer',
         'estimated_time_min' => 'integer',
@@ -120,5 +119,38 @@ class Route extends Model
     public function getRatingCountAttribute(): int
     {
         return $this->avgRating?->rating_count ?? 0;
+    }
+
+    /**
+     * Return the route geometry as decoded GeoJSON.
+     *
+     * The PostGIS `geometry` column is stored as a LINESTRING for spatial
+     * queries but is not read as GeoJSON by the connection. When a query
+     * selects `ST_AsGeoJSON(geometry) as geometry` it is decoded directly;
+     * otherwise the LineString is rebuilt from the stored `gpx_data`.
+     */
+    public function getGeometryAttribute(): ?array
+    {
+        $raw = $this->attributes['geometry'] ?? null;
+
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded) && isset($decoded['type'])) {
+                return $decoded;
+            }
+        } elseif (is_array($raw)) {
+            return $raw;
+        }
+
+        $segments = $this->gpx_data['tracks'][0]['segments'] ?? [];
+        $coordinates = [];
+
+        foreach ($segments as $segment) {
+            foreach ($segment as $point) {
+                $coordinates[] = [$point[0], $point[1]];
+            }
+        }
+
+        return $coordinates ? ['type' => 'LineString', 'coordinates' => $coordinates] : null;
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class RouteController extends Controller
 {
@@ -99,8 +100,9 @@ class RouteController extends Controller
         $routes = $query->with('features')
             ->leftJoin('route_avg_ratings as rav', 'routes.id', '=', 'rav.route_id')
             ->select([
-                'routes.id', 'routes.name', 'routes.description', 'routes.geometry', 'routes.distance_km',
+                'routes.id', 'routes.name', 'routes.description', 'routes.distance_km',
                 'routes.elevation_gain_m', 'routes.difficulty',
+                DB::raw('ST_AsGeoJSON(routes.geometry) as geometry'),
                 'rav.avg_rating', 'rav.rating_count',
             ])
             ->limit(200)
@@ -146,7 +148,7 @@ class RouteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'gpx_file' => 'required|file|mimes:gpx|max:10240',
+            'gpx_file' => 'required|file|max:10240|extensions:gpx',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'difficulty' => ['nullable', Rule::in(['easy', 'moderate', 'hard', 'expert'])],
@@ -162,18 +164,24 @@ class RouteController extends Controller
 
         // Parse GPX
         $parser = new GpxParser;
-        $parsed = $parser->parse($gpxContent);
+
+        try {
+            $parsed = $parser->parse($gpxContent);
+        } catch (\InvalidArgumentException) {
+            throw ValidationException::withMessages([
+                'gpx_file' => 'The uploaded file is not a valid GPX file.',
+            ]);
+        }
 
         // Store GPX file
-        $path = $gpxFile->store('gpx', 'private');
+        $path = $gpxFile->store('gpx', 'local');
 
-        DB::transaction(function () use ($request, $parsed, $path) {
+        $route = DB::transaction(function () use ($request, $parsed, $path) {
             $route = Route::create([
                 'user_id' => Auth::id(),
                 'name' => $request->name,
                 'description' => $request->description,
                 'gpx_data' => $parsed['gpx_data'],
-                'geometry' => $parsed['geometry'],
                 'distance_km' => $parsed['distance_km'],
                 'elevation_gain_m' => $parsed['elevation_gain_m'],
                 'estimated_time_min' => $request->estimated_time_min ?? $parsed['estimated_time_min'],
@@ -182,8 +190,12 @@ class RouteController extends Controller
                 'gpx_file_path' => $path,
             ]);
 
+            $this->storeGeometry($route, $parsed['geometry']);
+
             // Handle features
             $this->syncFeatures($route, $request->features ?? []);
+
+            return $route;
         });
 
         return redirect()->route('routes.show', $route)
@@ -206,7 +218,19 @@ class RouteController extends Controller
         // Generate elevation profile data
         $elevationProfile = $this->generateElevationProfile($route->gpx_data);
 
-        return view('routes.show', compact('route', 'elevationProfile'));
+        $featuresData = $route->features->map(fn ($f) => [
+            'id' => $f->id,
+            'feature_type' => $f->feature_type,
+            'description' => $f->description,
+            'start_lat' => $f->start_lat,
+            'start_lng' => $f->start_lng,
+            'label' => $f->label,
+            'icon' => $f->icon,
+        ])->values()->all();
+
+        $geometry = $route->geometry;
+
+        return view('routes.show', compact('route', 'elevationProfile', 'featuresData', 'geometry'));
     }
 
     public function edit(Route $route)
@@ -256,11 +280,23 @@ class RouteController extends Controller
 
     public function download(Route $route)
     {
-        if (! $route->gpx_file_path || ! Storage::disk('private')->exists($route->gpx_file_path)) {
+        if (! $route->gpx_file_path || ! Storage::disk('local')->exists($route->gpx_file_path)) {
             abort(404);
         }
 
-        return Storage::disk('private')->download($route->gpx_file_path, "{$route->name}.gpx");
+        return Storage::disk('local')->download($route->gpx_file_path, "{$route->name}.gpx");
+    }
+
+    private function storeGeometry(Route $route, ?array $geometry): void
+    {
+        if (empty($geometry)) {
+            return;
+        }
+
+        DB::update(
+            'UPDATE routes SET geometry = ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) WHERE id = ?',
+            [json_encode($geometry), $route->id]
+        );
     }
 
     private function syncFeatures(Route $route, array $features)

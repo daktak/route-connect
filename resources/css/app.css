@@ -99,6 +99,43 @@
     @apply absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50;
 }
 
+/* Trim slider */
+.trim-slider {
+    @apply absolute inset-x-0 top-0 w-full appearance-none bg-transparent pointer-events-none;
+    height: 36px;
+    margin: 0;
+}
+.trim-slider::-webkit-slider-runnable-track,
+.trim-slider::-moz-range-track {
+    background: transparent;
+    height: 8px;
+    margin: 14px 0;
+}
+.trim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    @apply h-4 w-4 rounded-full bg-white border-2 border-primary;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+    margin-top: -4px;
+}
+.trim-slider::-moz-range-thumb {
+    pointer-events: auto;
+    @apply h-4 w-4 rounded-full bg-white border-2 border-primary;
+    border: 2px solid #2563eb;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+.trim-slider-end {
+    direction: rtl;
+}
+.trim-slider:focus {
+    @apply outline-none;
+}
+.trim-slider:focus::-webkit-slider-thumb,
+.trim-slider:focus::-moz-range-thumb {
+    @apply ring-2 ring-primary ring-offset-1;
+}
+
 .notification-item {
     @apply px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0;
 }

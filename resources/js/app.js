@@ -694,15 +694,37 @@ Alpine.data('routePreviewMap', () => ({
         this.render();
     },
 
-    render() {
+render() {
         this.layer.clearLayers();
+        let coordinates = [];
         if (this.geometry) {
             const geojson = typeof this.geometry === 'string' ? JSON.parse(this.geometry) : this.geometry;
             L.geoJSON(geojson, {
                 style: { color: '#2563eb', weight: 4, opacity: 0.9 },
             }).addTo(this.layer);
+            coordinates = geojson.coordinates || [];
         }
-
+        if (coordinates.length) {
+            const start = [coordinates[0][1], coordinates[0][0]];
+            L.circleMarker(start, {
+                radius: 8,
+                color: '#fff',
+                weight: 2,
+                fillColor: '#16a34a',
+                fillOpacity: 1,
+            }).bindTooltip('Start').addTo(this.layer);
+            if (coordinates.length > 1) {
+                const last = coordinates[coordinates.length - 1];
+                const end = [last[1], last[0]];
+                L.circleMarker(end, {
+                    radius: 8,
+                    color: '#fff',
+                    weight: 2,
+                    fillColor: '#dc2626',
+                    fillOpacity: 1,
+                }).bindTooltip('End').addTo(this.layer);
+            }
+        }
         this.queueFit();
     },
 
@@ -1003,6 +1025,22 @@ Alpine.data('gpxUpload', () => ({
     resetTrim() {
         this.startCrop = 0;
         this.endCrop = 0;
+        this.recompute();
+    },
+
+    setTrimStart() {
+        this.startCrop = Math.max(0, Math.min(90, Math.round(this.startCrop)));
+        if (this.startCrop + this.endCrop > 90) {
+            this.endCrop = 90 - this.startCrop;
+        }
+        this.recompute();
+    },
+
+    setTrimEnd() {
+        this.endCrop = Math.max(0, Math.min(90, Math.round(this.endCrop)));
+        if (this.startCrop + this.endCrop > 90) {
+            this.startCrop = 90 - this.endCrop;
+        }
         this.recompute();
     },
 

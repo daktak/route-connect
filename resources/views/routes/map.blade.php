@@ -17,7 +17,7 @@
     </x-slot>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div x-data="routeMap({ routes: @json($mapRoutes) })"
+        <div x-data="routeMap({ routes: {{ Js::from($mapRoutes) }} })"
              class="relative flex h-[calc(100vh-14rem)] rounded-lg overflow-hidden border border-gray-200"
              style="min-height: 600px;">
 

@@ -20,7 +20,7 @@
                 <!-- Map & Elevation -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="route-map" class="absolute inset-0" x-data="singleRouteMap({ geometry: @json($geometry), difficulty: @json($route->difficulty), features: @json($featuresData) })"></div>
+                        <div id="route-map" class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, features: {{ Js::from($featuresData) }} })"></div>
                     </div>
                 </div>
 
@@ -28,7 +28,7 @@
                 @if($route->gpx_data['tracks'][0]['segments'][0] ?? false)
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Elevation Profile</h3>
-                        <div class="elevation-chart" x-data="elevationChart" :data="@json($elevationProfile)"></div>
+                        <div class="elevation-chart" x-data="elevationChart({ profile: {{ Js::from($elevationProfile) }} })"><canvas></canvas></div>
                         <div class="mt-4 grid grid-cols-3 gap-4 text-sm text-gray-600">
                             <div class="text-center">
                                 <div class="font-semibold text-gray-900">{{ $route->distance_km }} km</div>
@@ -98,15 +98,15 @@
                     </div>
 
                     <!-- Rating Breakdown -->
-                    @if($route->avgRating)
+                    @if($route->avgRatingModel)
                         <div class="px-6 py-4 border-b border-gray-100">
                             @for($i = 5; $i >= 1; $i--)
                                 <div class="flex items-center gap-3 mb-1">
                                     <span class="text-sm text-gray-600 w-6">{{ $i }}★</span>
                                     <div class="flex-1 h-2 bg-gray-100 rounded overflow-hidden">
-                                        <div class="bg-yellow-400 h-full rounded" style="width: {{ $route->rating_count ? ($route->avgRating->{'stars_' . $i} / $route->rating_count * 100) : 0 }}%"></div>
+                                        <div class="bg-yellow-400 h-full rounded" style="width: {{ $route->rating_count ? ($route->avgRatingModel->{'stars_' . $i} / $route->rating_count * 100) : 0 }}%"></div>
                                     </div>
-                                    <span class="text-sm text-gray-500 w-10 text-right">{{ $route->avgRating->{'stars_' . $i} }}</span>
+                                    <span class="text-sm text-gray-500 w-10 text-right">{{ $route->avgRatingModel->{'stars_' . $i} }}</span>
                                 </div>
                             @endfor
                         </div>

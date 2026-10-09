@@ -67,7 +67,7 @@ class Route extends Model
             ->orderBy('ride_date');
     }
 
-    public function avgRating(): HasOne
+    public function avgRatingModel(): HasOne
     {
         return $this->hasOne(RouteAvgRating::class, 'route_id');
     }
@@ -111,14 +111,18 @@ class Route extends Model
         return $query->whereHas('features', fn ($q) => $q->whereIn('feature_type', $features));
     }
 
-    public function getAverageRatingAttribute(): float
+    public function getAvgRatingAttribute(): float
     {
-        return $this->avgRating?->avg_rating ?? 0;
+        if (! is_null($this->attributes['avg_rating'] ?? null)) {
+            return (float) $this->attributes['avg_rating'];
+        }
+
+        return (float) ($this->avgRatingModel?->avg_rating ?? 0);
     }
 
     public function getRatingCountAttribute(): int
     {
-        return $this->avgRating?->rating_count ?? 0;
+        return $this->avgRatingModel?->rating_count ?? 0;
     }
 
     /**

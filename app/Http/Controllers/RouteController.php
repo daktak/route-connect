@@ -16,7 +16,7 @@ class RouteController extends Controller
     public function index(Request $request)
     {
         $query = Route::public()
-            ->with(['user', 'features', 'avgRating', 'upcomingRides'])
+            ->with(['user', 'features', 'avgRatingModel', 'upcomingRides'])
             ->withCount(['ratings', 'comments']);
 
         // Search
@@ -216,7 +216,7 @@ class RouteController extends Controller
         $route->load([
             'user',
             'features',
-            'avgRating',
+            'avgRatingModel',
             'ratings' => fn ($q) => $q->where('user_id', Auth::id()),
             'comments.user',
             'comments.replies.user',

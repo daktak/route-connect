@@ -113,12 +113,7 @@
                             <article class="route-card group">
                                 <div class="aspect-video bg-gray-100 relative overflow-hidden">
                                     @if($route->geometry)
-                                        <div class="absolute inset-0" x-data="{ route: @json($route) }" x-init="
-                                            const map = L.map(this, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, touchZoom: false }).setView([{{ $route->geometry['coordinates'][0][1] }}, {{ $route->geometry['coordinates'][0][0] }}], 12);
-                                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                                            L.geoJSON(route.geometry, { style: { color: '{{ $route->difficultyColor }}', weight: 3, opacity: 0.8 } }).addTo(map);
-                                            map.fitBounds(L.geoJSON(route.geometry).getBounds(), { padding: [10, 10] });
-                                        "></div>
+                                        <div class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, interactive: false })"></div>
                                     @else
                                         <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                                             <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">

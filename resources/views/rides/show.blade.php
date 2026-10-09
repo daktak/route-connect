@@ -28,7 +28,7 @@
                 <!-- Route Map -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="ride-map" class="absolute inset-0" x-data="routeMap({ routeGeometry: @json($ride->route->geometry), difficulty: @json($ride->route->difficulty) })" x-init="
+                        <div id="ride-map" class="absolute inset-0" x-data="routeMap({ routeGeometry: {{ Js::from($ride->route->geometry) }}, difficulty: {{ Js::from($ride->route->difficulty) }} })" x-init="
                             initMap();
                             if (routeGeometry) {
                                 const color = getDifficultyColor(difficulty);
@@ -98,7 +98,7 @@
                             @php
                                 $attendee = $ride->attendees()->where('user_id', auth()->id())->where('ride_version', $ride->version)->first();
                             @endphp
-                            <div x-data="rideJoin" :ride-id="{{ $ride->id }}" :user-id="{{ auth()->id() }}" :status="@json($attendee->status ?? null)" :ride-version="{{ $ride->version }}">
+                            <div x-data="rideJoin" :ride-id="{{ $ride->id }}" :user-id="{{ auth()->id() }}" :status="{{ Js::from($attendee->status ?? null) }}" :ride-version="{{ $ride->version }}">
                                 <button @click="toggle()" :disabled="loading" :class="buttonClass + ' px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors'" x-text="buttonText"></button>
                             </div>
                         @else

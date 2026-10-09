@@ -271,18 +271,24 @@ Alpine.data('routeMap', (config = {}) => ({
 }));
 
 // Elevation Chart Component
-Alpine.data('elevationChart', () => ({
+Alpine.data('elevationChart', (config = {}) => ({
+    profile: config.profile ?? [],
     chart: null,
-    chartData: null,
 
     init() {
-        this.$watch('data', () => this.renderChart());
+        if (!this.$el.querySelector('canvas')) {
+            this.$el.appendChild(document.createElement('canvas'));
+        }
+        this.$watch('profile', () => this.renderChart());
+        this.renderChart();
     },
 
     renderChart() {
-        if (!this.data || !this.data.length) return;
+        if (!this.profile || !this.profile.length) return;
 
-        const ctx = this.$el.getContext('2d');
+        const canvas = this.$el.querySelector('canvas') || this.$el;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
         if (this.chart) {
             this.chart.destroy();
@@ -291,10 +297,10 @@ Alpine.data('elevationChart', () => ({
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: this.data.map(d => d.distance_km),
+                labels: this.profile.map(d => d.distance_km),
                 datasets: [{
                     label: 'Elevation (m)',
-                    data: this.data.map(d => d.elevation),
+                    data: this.profile.map(d => d.elevation),
                     borderColor: '#2563eb',
                     backgroundColor: 'rgba(37, 99, 235, 0.1)',
                     fill: true,
@@ -755,12 +761,13 @@ Alpine.data('singleRouteMap', (config = {}) => ({
     geometry: config.geometry ?? null,
     difficulty: config.difficulty ?? 'moderate',
     features: config.features ?? [],
+    interactive: config.interactive ?? true,
 
     init() {
-        this.map = L.map(this.$el, {
-            zoomControl: true,
-            scrollWheelZoom: false,
-        }).setView([47.0, 8.0], 8);
+        this.map = L.map(this.$el, this.interactive
+            ? { zoomControl: true, scrollWheelZoom: false }
+            : { zoomControl: false, attributionControl: false, dragging: false, doubleClickZoom: false, boxZoom: false, keyboard: false, scrollWheelZoom: false, touchZoom: false })
+            .setView([47.0, 8.0], 8);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',

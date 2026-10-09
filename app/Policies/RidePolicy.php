@@ -24,12 +24,12 @@ class RidePolicy
 
     public function update(User $user, GroupRide $ride): bool
     {
-        return $ride->organizer_id === $user->id;
+        return $ride->organizer_id === $user->id || $user->isAdmin();
     }
 
     public function delete(User $user, GroupRide $ride): bool
     {
-        return $ride->organizer_id === $user->id;
+        return $ride->organizer_id === $user->id || $user->isAdmin();
     }
 
     public function join(User $user, GroupRide $ride): bool

@@ -9,11 +9,11 @@ class CommentPolicy
 {
     public function update(User $user, RouteComment $comment): bool
     {
-        return $comment->user_id === $user->id;
+        return $comment->user_id === $user->id || $user->isAdmin();
     }
 
     public function delete(User $user, RouteComment $comment): bool
     {
-        return $comment->user_id === $user->id;
+        return $comment->user_id === $user->id || $user->isAdmin();
     }
 }

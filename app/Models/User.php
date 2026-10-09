@@ -27,6 +27,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function isAdmin(): bool
+    {
+        return in_array(strtolower($this->email), config('admin.emails', []), true);
+    }
+
     public function routes(): HasMany
     {
         return $this->hasMany(Route::class)->latest();

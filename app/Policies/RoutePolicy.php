@@ -24,12 +24,12 @@ class RoutePolicy
 
     public function update(User $user, Route $route): bool
     {
-        return $route->user_id === $user->id;
+        return $route->user_id === $user->id || $user->isAdmin();
     }
 
     public function delete(User $user, Route $route): bool
     {
-        return $route->user_id === $user->id;
+        return $route->user_id === $user->id || $user->isAdmin();
     }
 
     public function download(User $user, Route $route): bool

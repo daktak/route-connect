@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\GpxController;
@@ -57,6 +58,15 @@ Route::delete('/rides/{ride}', [RideController::class, 'destroy'])->name('rides.
 Route::post('/rides/{ride}/join', [RideAttendeeController::class, 'join'])->name('rides.join')->middleware('auth');
 Route::delete('/rides/{ride}/leave', [RideAttendeeController::class, 'leave'])->name('rides.leave')->middleware('auth');
 Route::get('/rides/{ride}/attendee-status', [RideAttendeeController::class, 'status'])->name('rides.attendee.status')->middleware('auth');
+
+// Admin - User management
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+});
 
 // Notifications
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');

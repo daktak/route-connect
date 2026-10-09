@@ -59,7 +59,7 @@ Cycling Routes Web Application - A Laravel 13 application for submitting, discov
 ### Core Tables
 
 **users** - Authentication and profiles
-- id, name, email, password, avatar_url, timestamps
+- id, name, email, password, timestamps
 
 **routes** - Core route entity with geospatial data
 - id, user_id, name, description, gpx_data (JSONB), geometry (LINESTRING, SRID 4326)

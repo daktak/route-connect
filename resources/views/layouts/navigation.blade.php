@@ -89,6 +89,10 @@
                             <a href="{{ route('profile.edit') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">Profile</a>
                             <a href="{{ route('routes.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Routes</a>
                             <a href="{{ route('rides.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Rides</a>
+                            @if(auth()->user()->isAdmin())
+                                <hr class="my-1 border-gray-100">
+                                <a href="{{ route('admin.users.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">Manage Users</a>
+                            @endif
                             <hr class="my-1 border-gray-100">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -122,6 +126,10 @@
                     <hr class="my-2 border-gray-100">
                     <a href="{{ route('profile.edit') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Profile</a>
                     <a href="{{ route('routes.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">My Routes</a>
+                    <a href="{{ route('rides.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">My Rides</a>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.users.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Manage Users</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" class="px-2 py-2">
                         @csrf
                         <button type="submit" class="w-full text-left text-gray-700 hover:bg-gray-50 rounded">Log Out</button>

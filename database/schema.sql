@@ -19,8 +19,6 @@ CREATE TABLE users (
     email_verified_at TIMESTAMP WITH TIME ZONE,
     password VARCHAR(255) NOT NULL,
     remember_token VARCHAR(100),
-    avatar_url VARCHAR(500),
-    bio TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

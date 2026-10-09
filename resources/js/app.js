@@ -1,8 +1,11 @@
 import Alpine from 'alpinejs';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import Chart from 'chart.js/auto';
+import 'chartjs-adapter-date-fns';
 
 window.Alpine = Alpine;
+window.Chart = Chart;
 window.L = L;
 
 // Fix Leaflet marker icon paths
@@ -339,52 +342,48 @@ Alpine.data('elevationChart', (config = {}) => ({
             this.chart.destroy();
         }
 
-        import('chart.js/auto').then(({ default: Chart }) => {
-            import('chartjs-adapter-date-fns').then(() => {
-                this.chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: this.profile.map(d => d.distance_km),
-                        datasets: [{
-                            label: 'Elevation (m)',
-                            data: this.profile.map(d => d.elevation),
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            fill: true,
-                            tension: 0.3,
-                            pointRadius: 0,
-                            borderWidth: 2,
-                        }],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: {
-                            intersect: false,
-                            mode: 'index',
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: ctx => `Elevation: ${ctx.raw}m`,
-                                    title: ctx => `Distance: ${ctx[0].label} km`,
-                                },
-                            },
-                        },
-                        scales: {
-                            x: {
-                                title: { display: true, text: 'Distance (km)' },
-                                grid: { display: false },
-                            },
-                            y: {
-                                title: { display: true, text: 'Elevation (m)' },
-                                beginAtZero: false,
-                            },
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: this.profile.map(d => d.distance_km),
+                datasets: [{
+                    label: 'Elevation (m)',
+                    data: this.profile.map(d => d.elevation),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `Elevation: ${ctx.raw}m`,
+                            title: ctx => `Distance: ${ctx[0].label} km`,
                         },
                     },
-                });
-            });
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Distance (km)' },
+                        grid: { display: false },
+                    },
+                    y: {
+                        title: { display: true, text: 'Elevation (m)' },
+                        beginAtZero: false,
+                    },
+                },
+            },
         });
     },
 }));
@@ -812,12 +811,8 @@ Alpine.data('singleRouteMap', (config = {}) => ({
     features: config.features ?? [],
     interactive: config.interactive ?? true,
 
-    initMap(el = null) {
-        const container = el || this.$el;
-        if (this.map) {
-            return;
-        }
-        this.map = L.map(container, this.interactive
+    init() {
+        this.map = L.map(this.$el, this.interactive
             ? { zoomControl: true, scrollWheelZoom: false }
             : { zoomControl: false, attributionControl: false, dragging: false, doubleClickZoom: false, boxZoom: false, keyboard: false, scrollWheelZoom: false, touchZoom: false })
             .setView([47.0, 8.0], 8);
@@ -835,11 +830,6 @@ Alpine.data('singleRouteMap', (config = {}) => ({
         this.renderRoute();
         this.renderFeatures();
     },
-
-    init() {
-        // Map initialization is deferred until the element enters the viewport.
-    },
-
 
     renderRoute() {
         this.routeLayer.clearLayers();

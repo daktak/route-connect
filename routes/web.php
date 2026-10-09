@@ -16,6 +16,11 @@ Route::get('/', function () {
     return redirect()->route('routes.index');
 });
 
+// Breeze posts-auth redirect target
+Route::get('/dashboard', function () {
+    return redirect()->route('routes.index');
+})->name('dashboard');
+
 // Routes
 Route::get('/routes', [RouteController::class, 'index'])->name('routes.index');
 Route::get('/routes/map', [RouteController::class, 'map'])->name('routes.map');

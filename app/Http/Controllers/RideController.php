@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GroupRide;
 use App\Models\RideAttendee;
 use App\Models\Route;
+use App\Notifications\RideCancelled;
 use App\Notifications\RideChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -191,6 +192,22 @@ class RideController extends Controller
     public function destroy(GroupRide $ride)
     {
         $this->authorize('delete', $ride);
+
+        $ride->loadMissing('route');
+
+        $attendees = $ride->confirmedAttendees()
+            ->where('ride_version', $ride->version)
+            ->where('user_id', '!=', $ride->organizer_id)
+            ->with('user')
+            ->get();
+
+        $message = 'The ride "'.($ride->title ?: $ride->route?->name).'" on '
+            .$ride->ride_date->format('l, M j, Y').' has been cancelled.';
+
+        foreach ($attendees as $attendee) {
+            $attendee->user?->notify(new RideCancelled($ride, $message));
+        }
+
         $ride->delete();
 
         return redirect()->route('rides.index')

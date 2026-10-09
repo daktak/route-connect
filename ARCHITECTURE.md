@@ -186,6 +186,7 @@ Ride Created (v1) → Users Join (stored with v1)
 |--------------|---------|---------|
 | RideJoined | Attendee joins | Notify the ride organizer |
 | RideChanged | Ride updated | Notify attendees when route/date version increments |
+| RideCancelled | Ride deleted ("Cancel Ride") | Notify confirmed current-version attendees (excluding organizer) before the ride is removed |
 | NewComment / CommentReply | Comment posted | Notify route owner / parent commenter |
 | RideReminder | Scheduled (daily) | Notify attendees 24h before a ride |
 

@@ -7,6 +7,7 @@ use App\Models\RideAttendee;
 use App\Models\Route;
 use App\Notifications\RideCancelled;
 use App\Notifications\RideChanged;
+use App\Services\WeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,8 +22,13 @@ class RideController extends Controller
             $status = 'upcoming';
         }
 
-        $query = GroupRide::with(['route', 'organizer', 'attendees.user'])
-            ->withCount('attendees');
+        $query = GroupRide::with([
+            'route' => fn ($q) => $q
+                ->select('id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty')
+                ->selectRaw('ST_Y(ST_StartPoint(geometry)) as start_lat, ST_X(ST_StartPoint(geometry)) as start_lng'),
+            'organizer',
+            'attendees.user',
+        ])->withCount('attendees');
 
         if ($status === 'upcoming') {
             $query->upcoming();
@@ -40,6 +46,17 @@ class RideController extends Controller
         }
 
         $rides = $query->paginate(15)->withQueryString();
+
+        $rides->getCollection()->each(fn ($ride) => $ride->weather = null);
+
+        $upcoming = $rides->getCollection()
+            ->filter(fn ($ride) => $ride->ride_date->isFuture())
+            ->values();
+
+        if ($upcoming->isNotEmpty()) {
+            $weather = app(WeatherService::class)->forRides($upcoming);
+            $upcoming->each(fn ($ride) => $ride->weather = $weather[$ride->id] ?? null);
+        }
 
         return view('rides.index', [
             'rides' => $rides,
@@ -112,6 +129,10 @@ class RideController extends Controller
             'attendees.user',
             'attendees' => fn ($q) => $q->where('ride_version', $ride->version),
         ]);
+
+        $ride->weather = $ride->ride_date->isFuture()
+            ? app(WeatherService::class)->forRide($ride)
+            : null;
 
         return view('rides.show', compact('ride'));
     }

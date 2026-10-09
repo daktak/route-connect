@@ -122,6 +122,13 @@ Ride Created (v1) → Users Join (stored with v1)
 - RidePolicy: organizer can edit/cancel, attendees can leave
 - CommentPolicy: author can edit/delete own comments
 
+### 5. Weather Forecasts
+- Upcoming group rides show a forecast for their **start time and location**
+- `App\Services\WeatherService` resolves the location from the meeting point, falling back to the route start (`ST_StartPoint(geometry)`)
+- All rides on a page are batched into a single Open-Meteo request; results are cached per location + hour (`WEATHER_CACHE_TTL`, default 30 min)
+- Forecast horizon is `WEATHER_FORECAST_DAYS` (default 16); past rides and rides beyond the horizon show no weather
+- Rendered as a compact badge on ride cards and a panel on the ride detail page (condition, temperature, rain chance, wind); API failures degrade silently
+
 ## API Routes Structure
 
 | Method | URI | Controller | Name |
@@ -207,6 +214,7 @@ Notifications are delivered in-app and processed through the database queue (`QU
 - Database indexes on all foreign keys and filter columns
 - PostGIS spatial index for "nearby routes" queries
 - Database cache for route list with filters
+- Per-location/hour cache for Open-Meteo weather forecasts (batched per page)
 - Pagination (15 per page) on all list views
 - Queue notifications so requests stay responsive
 
@@ -227,5 +235,4 @@ Notifications are delivered in-app and processed through the database queue (`QU
 - Strava/Komoot import
 - Club/team functionality
 - Ride photo uploads
-- Weather integration for ride dates
 - Mobile app (React Native / Flutter) sharing API

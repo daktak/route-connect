@@ -157,6 +157,14 @@
                     <a href="{{ route('routes.show', $ride->route) }}" class="mt-4 block text-center text-primary hover:underline text-sm">View Route Details</a>
                 </div>
 
+                @if($ride->weather)
+                    @include('rides.partials.weather', [
+                        'weather' => $ride->weather,
+                        'location' => $ride->meeting_point_name ?: $ride->route->name . ' start',
+                        'variant' => 'detail',
+                    ])
+                @endif
+
                 <!-- Organizer -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Organizer</h3>

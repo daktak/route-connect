@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'open_meteo' => [
+        'base_url' => env('OPEN_METEO_BASE_URL', 'https://api.open-meteo.com/v1/forecast'),
+        'cache_ttl' => (int) env('WEATHER_CACHE_TTL', 1800),
+        'forecast_days' => (int) env('WEATHER_FORECAST_DAYS', 16),
+    ],
+
 ];

@@ -38,6 +38,13 @@
             <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $ride->description }}</p>
         @endif
 
+        @if($ride->weather)
+            @include('rides.partials.weather', [
+                'weather' => $ride->weather,
+                'location' => $ride->meeting_point_name ?: $ride->route->name . ' start',
+            ])
+        @endif
+
         <div class="flex items-center justify-between pt-4 border-t border-gray-100">
             <div class="flex items-center gap-4">
                 <div class="flex -space-x-2">

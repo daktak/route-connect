@@ -116,6 +116,83 @@ class GpxParser
         ];
     }
 
+    public function crop(array $parsed, int $startPct, int $endPct): array
+    {
+        $points = $this->flattenPoints($parsed);
+
+        $count = count($points);
+        if ($count <= 2 || $startPct + $endPct >= 100) {
+            return $parsed;
+        }
+
+        $startIndex = (int) round($count * $startPct / 100);
+        $endIndex = (int) round($count * $endPct / 100);
+
+        if ($count - $startIndex - $endIndex < 2) {
+            $endIndex = $count - $startIndex - 2;
+        }
+        if ($endIndex < 0) {
+            return $parsed;
+        }
+
+        $cropped = array_slice($points, $startIndex, $count - $startIndex - $endIndex);
+
+        $distanceKm = $this->calculateDistance($cropped);
+        $elevationGain = $this->calculateElevationGain($cropped);
+
+        $gpxData = $parsed['gpx_data'] ?? [];
+        $name = $gpxData['tracks'][0]['name'] ?? 'Track';
+
+        $gpxData['tracks'] = [[
+            'name' => $name,
+            'segments' => [$cropped],
+            'points_count' => count($cropped),
+        ]];
+        $gpxData['points_count'] = count($cropped);
+        $gpxData['bounds'] = $this->computeBounds($cropped);
+
+        return [
+            'gpx_data' => $gpxData,
+            'geometry' => $this->buildGeometry($cropped),
+            'distance_km' => round($distanceKm, 2),
+            'elevation_gain_m' => $elevationGain,
+            'estimated_time_min' => $this->estimateTime($distanceKm, $elevationGain),
+            'difficulty' => $this->determineDifficulty($distanceKm, $elevationGain),
+            'name' => $parsed['name'] ?? $name,
+        ];
+    }
+
+    private function flattenPoints(array $parsed): array
+    {
+        $points = [];
+
+        foreach (($parsed['gpx_data']['tracks'] ?? []) as $track) {
+            foreach (($track['segments'] ?? []) as $segment) {
+                foreach ($segment as $point) {
+                    $points[] = [$point[0], $point[1], $point[2] ?? 0];
+                }
+            }
+        }
+
+        return $points;
+    }
+
+    private function computeBounds(array $points): array
+    {
+        $bounds = ['min_lat' => 90, 'max_lat' => -90, 'min_lng' => 180, 'max_lng' => -180];
+
+        foreach ($points as $point) {
+            $lat = (float) $point[1];
+            $lng = (float) $point[0];
+            $bounds['min_lat'] = min($bounds['min_lat'], $lat);
+            $bounds['max_lat'] = max($bounds['max_lat'], $lat);
+            $bounds['min_lng'] = min($bounds['min_lng'], $lng);
+            $bounds['max_lng'] = max($bounds['max_lng'], $lng);
+        }
+
+        return $bounds;
+    }
+
     private function xpath(\SimpleXMLElement $element, string $path, string $namespace): array
     {
         $element->registerXPathNamespace('gpx', $namespace);

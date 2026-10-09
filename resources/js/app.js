@@ -877,6 +877,10 @@ Alpine.data('gpxUpload', () => ({
     error: null,
     customFeature: '',
     customFeatures: [],
+    startCrop: 0,
+    endCrop: 0,
+    fullPoints: [],
+    fullGeometry: null,
 
     async handleFile(event) {
         const file = event.target.files[0];
@@ -905,6 +909,15 @@ Alpine.data('gpxUpload', () => ({
 
             if (response.ok) {
                 this.preview = await response.json();
+                this.fullGeometry = this.preview.geometry;
+                this.fullPoints = [];
+                const tracks = (this.preview.gpx_data && this.preview.gpx_data.tracks) || [];
+                tracks.forEach((track) => (track.segments || []).forEach((segment) => segment.forEach((point) => {
+                    this.fullPoints.push([point[0], point[1], point[2] || 0]);
+                })));
+                this.startCrop = 0;
+                this.endCrop = 0;
+                this.recompute();
                 this.$dispatch('gpx-parsed', { preview: this.preview });
             } else {
                 const error = await response.json();
@@ -917,12 +930,92 @@ Alpine.data('gpxUpload', () => ({
         }
     },
 
+    recompute() {
+        if (!this.preview || !this.fullPoints.length) return;
+
+        const n = this.fullPoints.length;
+        if (n <= 2) return;
+
+        let startIndex = Math.round(n * this.startCrop / 100);
+        let endIndex = Math.round(n * this.endCrop / 100);
+
+        if (n - startIndex - endIndex < 2) {
+            endIndex = n - startIndex - 2;
+        }
+        if (endIndex < 0) return;
+
+        const cropped = this.fullPoints.slice(startIndex, n - endIndex);
+
+        const distance = this.calcDistance(cropped);
+        const gain = this.calcElevationGain(cropped);
+
+        this.preview = {
+            ...this.preview,
+            distance_km: Math.round(distance * 100) / 100,
+            elevation_gain_m: gain,
+            estimated_time_min: this.calcEstTime(distance, gain),
+            difficulty: this.calcDifficulty(distance, gain),
+            geometry: {
+                type: 'LineString',
+                coordinates: cropped.map((point) => [point[0], point[1]]),
+            },
+        };
+    },
+
+    calcDistance(points) {
+        let total = 0;
+        for (let i = 1; i < points.length; i++) {
+            total += this.haversineKm(points[i - 1][1], points[i - 1][0], points[i][1], points[i][0]);
+        }
+        return total;
+    },
+
+    calcElevationGain(points) {
+        let gain = 0;
+        for (let i = 1; i < points.length; i++) {
+            const diff = points[i][2] - points[i - 1][2];
+            if (diff > 0) gain += diff;
+        }
+        return Math.round(gain);
+    },
+
+    calcEstTime(distanceKm, gainM) {
+        return Math.round((distanceKm / 20 + gainM / 600) * 60);
+    },
+
+    calcDifficulty(distanceKm, gainM) {
+        const score = distanceKm / 10 + gainM / 200;
+        if (score < 3) return 'easy';
+        if (score < 6) return 'moderate';
+        if (score < 10) return 'hard';
+        return 'expert';
+    },
+
+    haversineKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2
+            + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    },
+
+    resetTrim() {
+        this.startCrop = 0;
+        this.endCrop = 0;
+        this.recompute();
+    },
+
     clear() {
         this.file = null;
         this.preview = null;
         this.error = null;
         this.customFeatures = [];
         this.customFeature = '';
+        this.startCrop = 0;
+        this.endCrop = 0;
+        this.fullPoints = [];
+        this.fullGeometry = null;
         this.$refs.fileInput.value = '';
     },
 

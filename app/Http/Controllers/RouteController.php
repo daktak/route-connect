@@ -157,6 +157,8 @@ class RouteController extends Controller
             'features' => 'nullable|array',
             'features.*' => 'string',
             'custom_feature' => 'nullable|string',
+            'start_crop' => 'nullable|integer|min:0|max:90',
+            'end_crop' => 'nullable|integer|min:0|max:90',
         ]);
 
         $gpxFile = $request->file('gpx_file');
@@ -171,6 +173,13 @@ class RouteController extends Controller
             throw ValidationException::withMessages([
                 'gpx_file' => 'The uploaded file is not a valid GPX file.',
             ]);
+        }
+
+        $startCrop = (int) $request->start_crop;
+        $endCrop = (int) $request->end_crop;
+
+        if (($startCrop > 0 || $endCrop > 0) && $startCrop + $endCrop < 100) {
+            $parsed = $parser->crop($parsed, $startCrop, $endCrop);
         }
 
         // Store GPX file

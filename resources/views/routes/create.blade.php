@@ -89,6 +89,30 @@
                     </div>
                 </div>
 
+                <!-- Trim Route -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-medium text-gray-900">Trim Route</h4>
+                        <button type="button" @click="resetTrim()" x-cloak x-show="startCrop > 0 || endCrop > 0" class="text-sm text-gray-500 hover:underline">Reset trim</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="flex items-center justify-between text-sm text-gray-700 mb-1">
+                                <span>Trim from start</span>
+                                <span class="font-medium" x-text="startCrop + '%'"></span>
+                            </label>
+                            <input type="range" name="start_crop" min="0" max="90" step="1" x-model="startCrop" @input="recompute()" class="w-full accent-primary">
+                        </div>
+                        <div>
+                            <label class="flex items-center justify-between text-sm text-gray-700 mb-1">
+                                <span>Trim from end</span>
+                                <span class="font-medium" x-text="endCrop + '%'"></span>
+                            </label>
+                            <input type="range" name="end_crop" min="0" max="90" step="1" x-model="endCrop" @input="recompute()" class="w-full accent-primary">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Map Preview -->
                 <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-6"
                      x-data="routePreviewMap"

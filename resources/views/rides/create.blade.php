@@ -17,11 +17,11 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Route</h3>
 
-                <div class="relative">
-                    <select name="route_id" id="route_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white">
+                <div x-data="routeSelect" class="relative">
+                    <select name="route_id" id="route_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white" @change="onRouteChange($event)">
                         <option value="">Select a route...</option>
                         @foreach($routes as $route)
-                            <option value="{{ $route->id }}" {{ old('route_id') == $route->id ? 'selected' : '' }}>
+                            <option value="{{ $route->id }}" data-start-lat="{{ $route->start_lat }}" data-start-lng="{{ $route->start_lng }}" {{ old('route_id') == $route->id ? 'selected' : '' }}>
                                 {{ $route->name }} ({{ $route->distance_km }} km, {{ $route->elevation_gain_m }}m)
                             </option>
                         @endforeach

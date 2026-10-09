@@ -28,24 +28,15 @@
                 <!-- Route Map -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="ride-map" class="absolute inset-0" x-data="routeMap({ routeGeometry: {{ Js::from($ride->route->geometry) }}, difficulty: {{ Js::from($ride->route->difficulty) }} })" x-init="
-                            initMap();
-                            if (routeGeometry) {
-                                const color = getDifficultyColor(difficulty);
-                                L.geoJSON(routeGeometry, { style: { color, weight: 4, opacity: 0.9 } }).addTo(routesLayer);
-                                map.fitBounds(routesLayer.getBounds(), { padding: [20, 20] });
-                            }
-                            @if($ride->meeting_point_lat && $ride->meeting_point_lng)
-                                L.marker([{{ $ride->meeting_point_lat }}, {{ $ride->meeting_point_lng }}], {
-                                    icon: L.divIcon({
-                                        className: 'custom-marker',
-                                        html: '<div class="text-3xl">📍</div>',
-                                        iconSize: [30, 30],
-                                        iconAnchor: [15, 30],
-                                    })
-                                }).bindPopup('Meeting Point: {{ $ride->meeting_point_name }}').addTo(map);
-                            @endif
-                        "></div>
+                        <div id="ride-map" class="absolute inset-0" x-data="routeMap({
+                            routeGeometry: {{ Js::from($ride->route->geometry) }},
+                            difficulty: {{ Js::from($ride->route->difficulty) }},
+                            meetingPoint: {{ Js::from(
+                                $ride->meeting_point_lat && $ride->meeting_point_lng
+                                    ? ['lat' => (float) $ride->meeting_point_lat, 'lng' => (float) $ride->meeting_point_lng, 'name' => $ride->meeting_point_name]
+                                    : null
+                            ) }}
+                        })" x-init="initMap()"></div>
                     </div>
                 </div>
 

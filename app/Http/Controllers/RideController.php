@@ -34,6 +34,13 @@ class RideController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty', 'gpx_data']);
 
+        $routes->each(function ($route) {
+            $coordinates = $route->geometry['coordinates'] ?? [];
+            $start = $coordinates[0] ?? null;
+            $route->start_lat = $start[1] ?? null;
+            $route->start_lng = $start[0] ?? null;
+        });
+
         return view('rides.create', compact('routes'));
     }
 

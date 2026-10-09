@@ -133,6 +133,7 @@ Alpine.data('routeMap', (config = {}) => ({
     selectedRouteId: config.selectedRouteId ?? null,
     routeGeometry: config.routeGeometry ?? null,
     difficulty: config.difficulty ?? 'moderate',
+    meetingPoint: config.meetingPoint ?? null,
 
     init() {
         // Map initialization happens on the map element via x-init="initMap($el)".
@@ -158,6 +159,8 @@ Alpine.data('routeMap', (config = {}) => ({
         this.$watch('selectedRouteId', () => this.highlightSelectedRoute());
 
         this.renderRoutes();
+        this.renderRouteGeometry();
+        this.renderMeetingPoint();
         this.locateUser();
     },
 
@@ -248,6 +251,27 @@ Alpine.data('routeMap', (config = {}) => ({
         if (this.routesLayer.getLayers().length > 0) {
             this.map.fitBounds(this.routesLayer.getBounds(), { padding: [20, 20] });
         }
+    },
+
+    renderRouteGeometry() {
+        if (!this.routeGeometry) return;
+
+        const color = this.getDifficultyColor(this.difficulty);
+        L.geoJSON(this.routeGeometry, { style: { color, weight: 4, opacity: 0.9 } }).addTo(this.routesLayer);
+        this.map.fitBounds(this.routesLayer.getBounds(), { padding: [20, 20] });
+    },
+
+    renderMeetingPoint() {
+        if (!this.meetingPoint || !this.meetingPoint.lat || !this.meetingPoint.lng) return;
+
+        L.marker([this.meetingPoint.lat, this.meetingPoint.lng], {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '<div class="text-3xl">📍</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30],
+            })
+        }).bindPopup('Meeting Point: ' + (this.meetingPoint.name || '')).addTo(this.map);
     },
 
     selectRoute(route) {
@@ -893,6 +917,12 @@ Alpine.data('meetingPointPicker', () => ({
         if (this.lat && this.lng) {
             this.setLocation(this.lat, this.lng, false);
         }
+
+        window.addEventListener('meeting-point-default', (e) => {
+            if (e.detail && e.detail.lat && e.detail.lng) {
+                this.setLocation(e.detail.lat, e.detail.lng);
+            }
+        });
     },
 
     setLocation(lat, lng, recenter = true) {
@@ -919,6 +949,20 @@ Alpine.data('meetingPointPicker', () => ({
             console.error('Geocoding failed', e);
         } finally {
             this.searching = false;
+        }
+    },
+}));
+
+Alpine.data('routeSelect', () => ({
+    onRouteChange(e) {
+        const opt = e.target.selectedOptions[0];
+        if (!opt) return;
+
+        const lat = parseFloat(opt.dataset.startLat);
+        const lng = parseFloat(opt.dataset.startLng);
+
+        if (lat && lng) {
+            this.$dispatch('meeting-point-default', { lat, lng });
         }
     },
 }));

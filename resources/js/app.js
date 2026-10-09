@@ -97,7 +97,7 @@ Alpine.data('routeFilters', () => ({
 }));
 
 // Leaflet Map Component
-Alpine.data('routeMap', () => ({
+Alpine.data('routeMap', (config = {}) => ({
     map: null,
     routesLayer: null,
     featuresLayer: null,
@@ -105,6 +105,10 @@ Alpine.data('routeMap', () => ({
     sidebarOpen: false,
     userMarker: null,
     userLocated: false,
+    routes: config.routes ?? [],
+    selectedRouteId: config.selectedRouteId ?? null,
+    routeGeometry: config.routeGeometry ?? null,
+    difficulty: config.difficulty ?? 'moderate',
 
     init() {
         // Map initialization happens on the map element via x-init="initMap($el)".
@@ -123,7 +127,7 @@ Alpine.data('routeMap', () => ({
             maxZoom: 19,
         }).addTo(this.map);
 
-        this.routesLayer = L.layerGroup().addTo(this.map);
+        this.routesLayer = L.featureGroup().addTo(this.map);
         this.featuresLayer = L.layerGroup().addTo(this.map);
 
         this.$watch('routes', () => this.renderRoutes());
@@ -679,33 +683,56 @@ Alpine.data('routePreviewMap', () => ({
             maxZoom: 19,
         }).addTo(this.map);
 
-        this.layer = L.layerGroup().addTo(this.map);
+        this.layer = L.featureGroup().addTo(this.map);
         this.$watch('geometry', () => this.render());
+
+        if (typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => this.queueFit());
+            this.resizeObserver.observe(this.$el);
+        }
+
         this.render();
     },
 
     render() {
         this.layer.clearLayers();
-        if (!this.geometry) return;
+        if (this.geometry) {
+            const geojson = typeof this.geometry === 'string' ? JSON.parse(this.geometry) : this.geometry;
+            L.geoJSON(geojson, {
+                style: { color: '#2563eb', weight: 4, opacity: 0.9 },
+            }).addTo(this.layer);
+        }
 
-        const geojson = typeof this.geometry === 'string' ? JSON.parse(this.geometry) : this.geometry;
-        L.geoJSON(geojson, {
-            style: { color: '#2563eb', weight: 4, opacity: 0.9 },
-        }).addTo(this.layer);
+        this.queueFit();
+    },
 
-        if (this.layer.getLayers().length > 0) {
+    queueFit() {
+        if (this.fitQueued) return;
+        this.fitQueued = true;
+        requestAnimationFrame(() => {
+            this.fitQueued = false;
+            this.fit();
+        });
+    },
+
+    fit() {
+        if (!this.map) return;
+        if (this.$el.clientWidth === 0 || this.$el.clientHeight === 0) return;
+
+        this.map.invalidateSize();
+        if (this.geometry && this.layer.getLayers().length > 0) {
             this.map.fitBounds(this.layer.getBounds(), { padding: [20, 20] });
         }
     },
 }));
 
-Alpine.data('singleRouteMap', () => ({
+Alpine.data('singleRouteMap', (config = {}) => ({
     map: null,
     routeLayer: null,
     featuresLayer: null,
-    geometry: null,
-    difficulty: 'moderate',
-    features: [],
+    geometry: config.geometry ?? null,
+    difficulty: config.difficulty ?? 'moderate',
+    features: config.features ?? [],
 
     init() {
         this.map = L.map(this.$el, {
@@ -718,7 +745,7 @@ Alpine.data('singleRouteMap', () => ({
             maxZoom: 19,
         }).addTo(this.map);
 
-        this.routeLayer = L.layerGroup().addTo(this.map);
+        this.routeLayer = L.featureGroup().addTo(this.map);
         this.featuresLayer = L.layerGroup().addTo(this.map);
 
         this.$watch('geometry', () => this.renderRoute());
@@ -870,6 +897,9 @@ Alpine.data('gpxUpload', () => ({
 
             const response = await fetch('/api/routes/parse-gpx', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
                 body: formData,
             });
 

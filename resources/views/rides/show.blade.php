@@ -28,7 +28,7 @@
                 <!-- Route Map -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="ride-map" class="absolute inset-0" x-data="routeMap" x-init="
+                        <div id="ride-map" class="absolute inset-0" x-data="routeMap({ routeGeometry: @json($ride->route->geometry), difficulty: @json($ride->route->difficulty) })" x-init="
                             initMap();
                             if (routeGeometry) {
                                 const color = getDifficultyColor(difficulty);
@@ -45,7 +45,7 @@
                                     })
                                 }).bindPopup('Meeting Point: {{ $ride->meeting_point_name }}').addTo(map);
                             @endif
-                        " :route-geometry="@json($ride->route->geometry)" :difficulty="{{ $ride->route->difficulty }}"></div>
+                        "></div>
                     </div>
                 </div>
 

@@ -92,7 +92,7 @@
                 <!-- Map Preview -->
                 <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-6"
                      x-data="routePreviewMap"
-                     :geometry="preview ? preview.geometry : null"></div>
+                     x-effect="geometry = preview ? preview.geometry : null"></div>
 
                 <!-- Features -->
                 <div class="border-t border-gray-100 pt-6">

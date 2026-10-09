@@ -20,7 +20,7 @@
                 <!-- Map & Elevation -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                     <div class="aspect-video relative">
-                        <div id="route-map" class="absolute inset-0" x-data="singleRouteMap" :geometry="@json($geometry)" :difficulty="@json($route->difficulty)" :features="@json($featuresData)"></div>
+                        <div id="route-map" class="absolute inset-0" x-data="singleRouteMap({ geometry: @json($geometry), difficulty: @json($route->difficulty), features: @json($featuresData) })"></div>
                     </div>
                 </div>
 

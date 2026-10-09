@@ -90,14 +90,14 @@
             <!-- Map Preview -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Map</h3>
-                <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-data="routeMap" x-init="
+                <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-data="routeMap({ routeGeometry: @json($route->geometry), difficulty: @json($route->difficulty) })" x-init="
                     initMap();
                     if (routeGeometry) {
                         const color = getDifficultyColor(difficulty);
                         L.geoJSON(routeGeometry, { style: { color, weight: 4, opacity: 0.9 } }).addTo(routesLayer);
                         map.fitBounds(routesLayer.getBounds(), { padding: [20, 20] });
                     }
-                " :route-geometry="@json($route->geometry)" :difficulty="{{ $route->difficulty }}"></div>
+                "></div>
             </div>
 
             <!-- GPX File Info -->

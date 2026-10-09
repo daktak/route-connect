@@ -65,6 +65,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force Root URL
+    |--------------------------------------------------------------------------
+    |
+    | When serving the application from a sub-path (for example
+    | https://example.com/RouteConnect), set APP_URL to include that path and
+    | enable this option. Laravel will then generate all URLs using APP_URL,
+    | even in CLI contexts and when the web server strips the path prefix.
+    |
+    */
+
+    'force_root_url' => env('APP_FORCE_ROOT_URL', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

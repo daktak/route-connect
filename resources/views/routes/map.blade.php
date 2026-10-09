@@ -83,7 +83,7 @@
                             </select>
                         </div>
 
-                        <button @click="clearFilters" @x-show="hasActiveFilters()" class="w-full text-sm text-primary hover:underline font-medium">Clear filters</button>
+                        <button @click="clearFilters" x-show="hasActiveFilters()" class="w-full text-sm text-primary hover:underline font-medium">Clear filters</button>
                     </div>
 
                     <!-- Routes List in Sidebar -->

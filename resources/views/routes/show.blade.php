@@ -119,37 +119,14 @@
                         @endphp
                         <div class="p-6 border-b border-gray-100">
                             <h4 class="font-medium text-gray-900 mb-3">{{ $userRating ? 'Your Rating' : 'Rate this Route' }}</h4>
-                            <div x-data="{ rating: {{ $userRating->rating ?? 0 }}, loading: false }" class="flex items-center gap-4">
+                            <div x-data="routeRating({{ $userRating->rating ?? 0 }}, '{{ route('routes.rate', $route) }}')" class="flex items-center gap-4">
                                 <template x-for="i in 5" :key="i">
-                                    <button @click="rating = i" :class="i <= rating ? 'filled' : 'empty'" class="rating-star text-3xl cursor-pointer transition-colors" :disabled="loading">★</button>
+                                    <button type="button" @click="rating = i" :class="i <= rating ? 'filled' : 'empty'" class="rating-star text-3xl cursor-pointer transition-colors" :disabled="loading">★</button>
                                 </template>
-                                <button @click="submitRating()" :disabled="loading || rating === 0" class="ml-4 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="button" @click="submit()" :disabled="loading || rating === 0" class="ml-4 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">
                                     <span x-show="!loading">{{ $userRating ? 'Update' : 'Submit' }}</span>
-                                    <span x-show="loading">Saving...</span>
+                                    <span x-show="loading" x-cloak>Saving...</span>
                                 </button>
-                                <script>
-                                    function submitRating() {
-                                        const btn = this.$el;
-                                        btn.disabled = true;
-                                        this.loading = true;
-                                        fetch('/routes/{{ $route->id }}/rate', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                            },
-                                            body: JSON.stringify({ rating: this.rating })
-                                        }).then(r => {
-                                            if (r.ok) {
-                                                location.reload();
-                                            } else {
-                                                alert('Failed to submit rating');
-                                                btn.disabled = false;
-                                                this.loading = false;
-                                            }
-                                        });
-                                    }
-                                </script>
                             </div>
                         </div>
                     @else
@@ -163,10 +140,13 @@
                         <h4 class="font-semibold text-gray-900 mb-4">Comments ({{ $route->comments()->count() }})</h4>
 
                         @auth
-                            <form id="comment-form" class="mb-6">
-                                <textarea name="content" rows="3" placeholder="Write a comment..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required></textarea>
+                            <form @submit.prevent="submit()" x-data="routeComments('{{ route('routes.comments.store', $route) }}')" class="mb-6">
+                                <textarea name="content" x-model="content" rows="3" placeholder="Write a comment..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required></textarea>
                                 <div class="mt-2 flex justify-end">
-                                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors">Post Comment</button>
+                                    <button type="submit" :disabled="posting" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span x-show="!posting">Post Comment</span>
+                                        <span x-show="posting" x-cloak>Posting...</span>
+                                    </button>
                                 </div>
                             </form>
                         @else
@@ -272,40 +252,4 @@
             </aside>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const form = e.target;
-                const btn = form.querySelector('button[type="submit"]');
-                const content = form.querySelector('textarea[name="content"]').value;
-
-                btn.disabled = true;
-                btn.textContent = 'Posting...';
-
-                try {
-                    const response = await fetch('/routes/{{ $route->id }}/comments', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        },
-                        body: JSON.stringify({ content })
-                    });
-
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('Failed to post comment');
-                    }
-                } catch (e) {
-                    alert('An error occurred');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Post Comment';
-                }
-            });
-        });
-    </script>
 </x-app-layout>

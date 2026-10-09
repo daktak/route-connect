@@ -1,12 +1,12 @@
 import Alpine from 'alpinejs';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet';
+import L from 'leaflet';
 import Chart from 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 
 window.Alpine = Alpine;
 window.Chart = Chart;
-window.L = require('leaflet');
+window.L = L;
 
 // Fix Leaflet marker icon paths
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -306,7 +306,7 @@ Alpine.data('rideJoin', () => ({
         if (!this.rideId || !this.userId) return;
 
         try {
-            const response = await fetch(`/api/rides/${this.rideId}/attendee-status`);
+            const response = await fetch(`/rides/${this.rideId}/attendee-status`);
             const data = await response.json();
             this.status = data.status;
             this.rideVersion = data.ride_version;
@@ -320,7 +320,7 @@ Alpine.data('rideJoin', () => ({
         this.loading = true;
 
         try {
-            const response = await fetch(`/api/rides/${this.rideId}/join`, {
+            const response = await fetch(`/rides/${this.rideId}/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -347,7 +347,7 @@ Alpine.data('rideJoin', () => ({
         this.loading = true;
 
         try {
-            const response = await fetch(`/api/rides/${this.rideId}/leave`, {
+            const response = await fetch(`/rides/${this.rideId}/leave`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -451,6 +451,175 @@ Alpine.data('notificationBell', () => ({
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         return date.toLocaleDateString();
+    },
+}));
+
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
+// Route star rating
+Alpine.data('routeRating', (initial = 0, url = '') => ({
+    rating: Number(initial) || 0,
+    loading: false,
+    url,
+    async submit() {
+        if (!this.rating || this.loading || !this.url) return;
+
+        this.loading = true;
+        try {
+            const response = await fetch(this.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({ rating: this.rating }),
+            });
+
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            alert('Failed to submit rating');
+        } catch (e) {
+            alert('Failed to submit rating');
+        }
+        this.loading = false;
+    },
+}));
+
+// New top-level comment form
+Alpine.data('routeComments', (url = '') => ({
+    content: '',
+    posting: false,
+    url,
+    async submit() {
+        if (!this.content.trim() || this.posting || !this.url) return;
+
+        this.posting = true;
+        try {
+            const response = await fetch(this.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({ content: this.content }),
+            });
+
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            alert('Failed to post comment');
+        } catch (e) {
+            alert('An error occurred');
+        }
+        this.posting = false;
+    },
+}));
+
+// Single comment (edit / delete / reply)
+Alpine.data('commentItem', () => ({
+    editing: false,
+    replyOpen: false,
+    editContent: '',
+    replyContent: '',
+    saving: false,
+    commentId: null,
+    routeId: null,
+    originalContent: '',
+
+    init() {
+        this.commentId = this.$el.dataset.commentId;
+        this.routeId = this.$el.dataset.routeId;
+        this.originalContent = this.$el.dataset.content || '';
+        this.editContent = this.originalContent;
+    },
+
+    toggleEdit() {
+        this.editing = !this.editing;
+        if (this.editing) {
+            this.editContent = this.originalContent;
+        }
+    },
+
+    async updateComment() {
+        if (this.saving) return;
+
+        this.saving = true;
+        try {
+            const response = await fetch(`/comments/${this.commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({ content: this.editContent }),
+            });
+
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            alert('Failed to update comment');
+        } catch (e) {
+            alert('Failed to update comment');
+        }
+        this.saving = false;
+    },
+
+    async deleteComment() {
+        if (!confirm('Delete this comment?')) return;
+
+        try {
+            const response = await fetch(`/comments/${this.commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            }
+        } catch (e) {
+            alert('Failed to delete comment');
+        }
+    },
+
+    async submitReply() {
+        if (!this.replyContent.trim() || this.saving) return;
+
+        this.saving = true;
+        try {
+            const response = await fetch(`/routes/${this.routeId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({
+                    content: this.replyContent,
+                    parent_id: Number(this.commentId),
+                }),
+            });
+
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            alert('Failed to post reply');
+        } catch (e) {
+            alert('Failed to post reply');
+        }
+        this.saving = false;
     },
 }));
 

@@ -54,7 +54,7 @@
                             </span>
                         </button>
 
-                        <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="notification-dropdown">
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="notification-dropdown">
                             <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-semibold text-gray-900">Notifications</h3>
                                 <button @click="markAllAsRead" class="text-xs text-primary hover:underline" x-show="unreadCount > 0">Mark all read</button>
@@ -85,7 +85,7 @@
                             </svg>
                         </button>
 
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
                             <a href="{{ route('profile.edit') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">Profile</a>
                             <a href="{{ route('routes.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Routes</a>
                             <a href="{{ route('rides.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Rides</a>
@@ -111,7 +111,7 @@
         </div>
 
         <!-- Mobile Menu -->
-        <div x-show="mobileMenuOpen" x-transition class="md:hidden py-4 border-t border-gray-100">
+        <div x-show="mobileMenuOpen" x-cloak x-transition class="md:hidden py-4 border-t border-gray-100">
             <div class="flex flex-col gap-2">
                 <a href="{{ route('routes.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Routes</a>
                 <a href="{{ route('routes.map') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Map</a>

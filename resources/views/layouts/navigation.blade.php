@@ -24,10 +24,10 @@
                 </a>
 
                 @auth
-                    <a href="{{ route('routes.create') }}" class="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
+                    <a href="{{ route('routes.create') }}" class="text-sm font-medium {{ request()->routeIs('routes.create') ? 'text-primary' : 'text-gray-700 hover:text-primary' }} transition-colors">
                         Add Route
                     </a>
-                    <a href="{{ route('rides.create') }}" class="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                    <a href="{{ route('rides.create') }}" class="text-sm font-medium {{ request()->routeIs('rides.create') ? 'text-primary' : 'text-gray-700 hover:text-primary' }} transition-colors">
                         Create Ride
                     </a>
                 @endauth
@@ -117,8 +117,8 @@
                 <a href="{{ route('routes.map') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Map</a>
                 <a href="{{ route('rides.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Group Rides</a>
                 @auth
-                    <a href="{{ route('routes.create') }}" class="px-2 py-2 text-primary hover:bg-primary/10 rounded font-medium">Add Route</a>
-                    <a href="{{ route('rides.create') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Create Ride</a>
+                    <a href="{{ route('routes.create') }}" class="px-2 py-2 rounded {{ request()->routeIs('routes.create') ? 'text-primary font-medium bg-primary/10' : 'text-gray-700 hover:bg-gray-50' }}">Add Route</a>
+                    <a href="{{ route('rides.create') }}" class="px-2 py-2 rounded {{ request()->routeIs('rides.create') ? 'text-primary font-medium bg-primary/10' : 'text-gray-700 hover:bg-gray-50' }}">Create Ride</a>
                     <hr class="my-2 border-gray-100">
                     <a href="{{ route('profile.edit') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">Profile</a>
                     <a href="{{ route('routes.index') }}" class="px-2 py-2 text-gray-700 hover:bg-gray-50 rounded">My Routes</a>

@@ -1,8 +1,8 @@
-<div class="space-y-2" x-data="{ routes: @json($mapRoutes) }">
-    <div x-data="mapSidebar" @@x-for="route in routes" :key="route.id">
-        <button @click="selectRoute(route)" class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-colors" :class="{ 'bg-primary/10 border-primary': selectedRouteId === route.id }">
+<div class="space-y-2">
+    <template x-for="route in routes" :key="route.id">
+        <button @click="selectRoute(route)" class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-transparent transition-colors" :class="{ 'bg-primary/10 border-primary': selectedRoute && selectedRoute.id === route.id }">
             <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full" :style="'background-color: ' + getDifficultyColor(route.difficulty)"></span>
+                <span class="w-3 h-3 rounded-full flex-shrink-0" :style="'background-color: ' + getDifficultyColor(route.difficulty)"></span>
                 <span class="flex-1 text-sm font-medium text-gray-900 truncate" x-text="route.name"></span>
             </div>
             <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
@@ -14,5 +14,7 @@
                 </span>
             </div>
         </button>
-    </div>
+    </template>
+
+    <p x-show="!routes || !routes.length" class="text-sm text-gray-500 py-4 text-center">No routes found</p>
 </div>

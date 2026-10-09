@@ -102,16 +102,21 @@ Alpine.data('routeMap', () => ({
     routesLayer: null,
     featuresLayer: null,
     selectedRoute: null,
+    sidebarOpen: false,
+    userMarker: null,
+    userLocated: false,
 
     init() {
-        this.initMap();
+        // Map initialization happens on the map element via x-init="initMap($el)".
     },
 
-    initMap() {
-        this.map = L.map(this.$el, {
+    initMap(el = null) {
+        const container = el || this.$refs.map || this.$el;
+
+        this.map = L.map(container, {
             zoomControl: true,
             scrollWheelZoom: true,
-        }).setView([47.0, 8.0], 8);
+        }).setView([47.0, 8.0], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -123,6 +128,38 @@ Alpine.data('routeMap', () => ({
 
         this.$watch('routes', () => this.renderRoutes());
         this.$watch('selectedRouteId', () => this.highlightSelectedRoute());
+
+        this.renderRoutes();
+        this.locateUser();
+    },
+
+    locateUser() {
+        if (!navigator.geolocation) return;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                this.userLocated = true;
+
+                if (this.userMarker) {
+                    this.map.removeLayer(this.userMarker);
+                }
+
+                this.userMarker = L.circleMarker([latitude, longitude], {
+                    radius: 8,
+                    color: '#1d4ed8',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.9,
+                    weight: 2,
+                }).addTo(this.map).bindPopup('You are here');
+
+                this.map.setView([latitude, longitude], 11);
+            },
+            () => {
+                // Permission denied or unavailable: keep the default view.
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
     },
 
     renderRoutes() {
@@ -150,7 +187,9 @@ Alpine.data('routeMap', () => ({
             geojson.addTo(this.routesLayer);
         });
 
-        this.fitBounds();
+        if (!this.userLocated) {
+            this.fitBounds();
+        }
     },
 
     createRoutePopup(route) {

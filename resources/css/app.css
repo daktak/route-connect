@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * {
+        @apply border-gray-200;
+    }
+    body {
+        @apply font-sans antialiased;
+    }
+}
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+/* Leaflet map styles */
+.leaflet-container {
+    @apply rounded-lg border border-gray-200;
+}
+
+.leaflet-popup-content-wrapper {
+    @apply rounded-lg shadow-lg;
+}
+
+.leaflet-popup-content {
+    @apply p-2;
+}
+
+/* Elevation chart container */
+.elevation-chart {
+    @apply w-full h-48;
+}
+
+/* Route card */
+.route-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden transition-shadow hover:shadow-md;
+}
+
+.route-card:hover {
+    @apply shadow-lg;
+}
+
+/* Feature badges */
+.feature-badge {
+    @apply inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700;
+}
+
+.feature-badge.gravel { @apply bg-amber-100 text-amber-800; }
+.feature-badge.steep { @apply bg-red-100 text-red-800; }
+.feature-badge.technical { @apply bg-purple-100 text-purple-800; }
+.feature-badge.scenic { @apply bg-green-100 text-green-800; }
+.feature-badge.road { @apply bg-blue-100 text-blue-800; }
+.feature-badge.water { @apply bg-cyan-100 text-cyan-800; }
+.feature-badge.cafe { @apply bg-orange-100 text-orange-800; }
+.feature-badge.shop { @apply bg-indigo-100 text-indigo-800; }
+.feature-badge.custom { @apply bg-pink-100 text-pink-800; }
+
+/* Rating stars */
+.rating-stars {
+    @apply flex items-center gap-0.5;
+}
+
+.rating-star {
+    @apply text-2xl cursor-pointer transition-colors;
+}
+
+.rating-star.filled { @apply text-yellow-400; }
+.rating-star.empty { @apply text-gray-300; }
+
+/* Ride status badges */
+.ride-status {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.ride-status.planned { @apply bg-blue-100 text-blue-800; }
+.ride-status.confirmed { @apply bg-green-100 text-green-800; }
+.ride-status.cancelled { @apply bg-red-100 text-red-800; }
+.ride-status.completed { @apply bg-gray-100 text-gray-800; }
+
+/* Difficulty badges */
+.difficulty-badge {
+    @apply inline-flex items-center px-2 py-1 rounded text-xs font-medium;
+}
+
+.difficulty-badge.easy { @apply bg-green-100 text-green-800; }
+.difficulty-badge.moderate { @apply bg-yellow-100 text-yellow-800; }
+.difficulty-badge.hard { @apply bg-orange-100 text-orange-800; }
+.difficulty-badge.expert { @apply bg-red-100 text-red-800; }
+
+/* Notification dropdown */
+.notification-dropdown {
+    @apply absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50;
+}
+
+.notification-item {
+    @apply px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0;
+}
+
+.notification-item.unread {
+    @apply bg-blue-50;
+}

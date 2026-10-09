@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -75,6 +76,29 @@ class Route extends Model
     public function scopePublic($query)
     {
         return $query->where('is_public', true);
+    }
+
+    /**
+     * Select only the columns needed for list/map views, embedding a simplified
+     * GeoJSON geometry instead of loading the full stored geometry and gpx_data.
+     */
+    public function scopeListColumns(Builder $query, float $tolerance = 0.0001): Builder
+    {
+        $tolerance = number_format($tolerance, 6, '.', '');
+
+        return $query->select([
+            'routes.id',
+            'routes.user_id',
+            'routes.name',
+            'routes.description',
+            'routes.distance_km',
+            'routes.elevation_gain_m',
+            'routes.estimated_time_min',
+            'routes.difficulty',
+            'routes.is_public',
+            'routes.created_at',
+            'routes.updated_at',
+        ])->selectRaw("ST_AsGeoJSON(ST_SimplifyPreserveTopology(routes.geometry, {$tolerance})) as geometry_raw");
     }
 
     public function scopeByDifficulty($query, $difficulty)

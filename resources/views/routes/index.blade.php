@@ -113,7 +113,7 @@
                             <article class="route-card group">
                                 <div class="aspect-video bg-gray-100 relative overflow-hidden">
                                     @if($route->geometry)
-                                        <div class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, interactive: false })"></div>
+                                        <div class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, interactive: false })" x-intersect.once="initMap()"></div>
                                     @else
                                         <div class="absolute inset-0 flex items-center justify-center text-gray-400">
                                             <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">

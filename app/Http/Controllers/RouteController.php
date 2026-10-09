@@ -16,16 +16,13 @@ class RouteController extends Controller
     public function index(Request $request)
     {
         $query = Route::public()
-            ->with(['user', 'features', 'avgRatingModel', 'upcomingRides'])
-            ->withCount(['ratings', 'comments']);
+            ->listColumns(0.0001)
+            ->with(['user' => fn ($q) => $q->select('id', 'name'), 'features', 'avgRatingModel']);
 
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
+            $query->whereRaw("to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,'')) @@ plainto_tsquery('english', ?)", [$search]);
         }
 
         // Difficulty
@@ -65,14 +62,20 @@ class RouteController extends Controller
             'elevation_desc' => $query->orderBy('elevation_gain_m', 'desc'),
             'rating_desc' => $query->join('route_avg_ratings as rav', 'routes.id', '=', 'rav.route_id')
                 ->orderBy('rav.avg_rating', 'desc')
-                ->select('routes.*'),
+                ->addSelect(['rav.avg_rating', 'rav.rating_count']),
             'popular' => $query->join('route_avg_ratings as rav', 'routes.id', '=', 'rav.route_id')
                 ->orderBy('rav.rating_count', 'desc')
-                ->select('routes.*'),
+                ->addSelect(['rav.avg_rating', 'rav.rating_count']),
             default => $query->latest(),
         };
 
         $routes = $query->paginate(15)->withQueryString();
+
+        $routes->getCollection()->each(function ($r) {
+            if (isset($r->geometry) && is_string($r->geometry)) {
+                $r->geometry = json_decode($r->geometry, true);
+            }
+        });
 
         return view('routes.index', compact('routes'));
     }
@@ -101,12 +104,16 @@ class RouteController extends Controller
             ->leftJoin('route_avg_ratings as rav', 'routes.id', '=', 'rav.route_id')
             ->select([
                 'routes.id', 'routes.name', 'routes.description', 'routes.distance_km',
-                'routes.elevation_gain_m', 'routes.difficulty',
-                DB::raw('ST_AsGeoJSON(routes.geometry) as geometry'),
+                'routes.elevation_gain_m', 'routes.difficulty', 'routes.created_at', 'routes.updated_at',
+                DB::raw('ST_AsGeoJSON(ST_SimplifyPreserveTopology(routes.geometry, 0.0002)) as geometry_raw'),
                 'rav.avg_rating', 'rav.rating_count',
             ])
             ->limit(200)
             ->get();
+
+        $routes->each(function ($r) {
+            $r->geometry = json_decode($r->geometry_raw, true);
+        });
 
         // Prepare map data for Alpine.js
         $mapRoutes = $routes->map(function ($r) {
@@ -381,5 +388,28 @@ class RouteController extends Controller
         $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
 
         return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
+    }
+
+    /**
+     * @return array<string>
+     */
+    private function listSelectColumns(float $tolerance = 0.0001): array
+    {
+        $tolerance = number_format($tolerance, 6, '.', '');
+
+        return [
+            'routes.id',
+            'routes.user_id',
+            'routes.name',
+            'routes.description',
+            'routes.distance_km',
+            'routes.elevation_gain_m',
+            'routes.estimated_time_min',
+            'routes.difficulty',
+            'routes.is_public',
+            'routes.created_at',
+            'routes.updated_at',
+            DB::raw("ST_AsGeoJSON(ST_SimplifyPreserveTopology(routes.geometry, {$tolerance})) as geometry"),
+        ];
     }
 }

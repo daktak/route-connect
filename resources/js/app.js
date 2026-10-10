@@ -342,7 +342,7 @@ Alpine.data('elevationChart', (config = {}) => ({
             this.chart.destroy();
         }
 
-        // Create gradient fill - use plugin to align with chart area after layout
+        // Create gradient fill - use plugin registered globally to align with chart area
         let bgGradient = null;
         const profile = this.profile;
         const totalDist = profile[profile.length - 1].distance_km - profile[0].distance_km;
@@ -398,6 +398,20 @@ Alpine.data('elevationChart', (config = {}) => ({
                     _gradientBuilder: buildGradient,
                 };
 
+        // Register plugin once
+        if (!Chart.elevationGradientRegistered) {
+            Chart.elevationGradientRegistered = true;
+            Chart.register({
+                id: 'elevationGradient',
+                afterLayout: (chart) => {
+                    const ds = chart.data.datasets[0];
+                    if (ds && ds._gradientBuilder) {
+                        ds.backgroundColor = ds._gradientBuilder(chart);
+                    }
+                },
+            });
+        }
+
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -413,14 +427,6 @@ Alpine.data('elevationChart', (config = {}) => ({
                 },
                 plugins: {
                     legend: { display: false },
-                    elevationGradient: {
-                        beforeDraw: (chart) => {
-                            const ds = chart.data.datasets[0];
-                            if (ds && ds._gradientBuilder) {
-                                ds.backgroundColor = ds._gradientBuilder(chart);
-                            }
-                        },
-                    },
                     tooltip: {
                         callbacks: {
                             label: (ctx) => {

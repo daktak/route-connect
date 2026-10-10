@@ -304,6 +304,7 @@ Alpine.data('routeMap', (config = {}) => ({
             water: '💧',
             cafe: '☕',
             shop: '🔧',
+            mtb: '🚵',
         };
         return L.divIcon({
             className: 'custom-marker',
@@ -343,67 +344,22 @@ Alpine.data('elevationChart', (config = {}) => ({
             this.chart.destroy();
         }
 
-        // Create gradient fill - use plugin registered globally to align with chart area
-        let bgGradient = null;
         const profile = this.profile;
-        const totalDist = profile[profile.length - 1].distance_km - profile[0].distance_km;
-
-        const getGradAt = (distKm) => {
-            for (let i = 1; i < profile.length; i++) {
-                if (profile[i].distance_km >= distKm) {
-                    const dElev = profile[i].elevation - profile[i - 1].elevation;
-                    const dDistM = (profile[i].distance_km - profile[i - 1].distance_km) * 1000;
-                    return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
-                }
-            }
-            const i = profile.length - 1;
-            const dElev = profile[i].elevation - profile[i - 1].elevation;
-            const dDistM = (profile[i].distance_km - profile[i - 1].distance_km) * 1000;
-            return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
-        };
-
-        const buildGradient = (chart) => {
-            const scale = chart.scales.x;
-            if (!scale) return null;
-            const left = scale.getPixelForValue(profile[0].distance_km);
-            const right = scale.getPixelForValue(profile[profile.length - 1].distance_km);
-            const grad = chart.ctx.createLinearGradient(left, 0, right, 0);
-            const numStops = Math.min(100, profile.length * 2);
-            for (let j = 0; j <= numStops; j++) {
-                const distKm = profile[0].distance_km + (totalDist * j / numStops);
-                const gradVal = getGradAt(distKm);
-                const t = j / numStops;
-                let color = 'rgba(37, 99, 235, 0.15)';
-                if (gradVal > 5) color = 'rgba(239, 68, 68, 0.25)';
-                else if (gradVal > 2) color = 'rgba(245, 158, 11, 0.25)';
-                else if (gradVal < -2) color = 'rgba(34, 197, 94, 0.25)';
-                grad.addColorStop(t, color);
-            }
-            return grad;
-        };
-
-        // Initial dummy gradient (will be replaced by plugin)
-        bgGradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
-        bgGradient.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
-        bgGradient.addColorStop(1, 'rgba(37, 99, 235, 0.15)');
-
-        const datasetConfig = {
-                    label: 'Elevation (m)',
-                    data: profile.map(d => d.elevation),
-                    borderColor: '#2563eb',
-                    backgroundColor: bgGradient,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0,
-                    borderWidth: 2,
-                    _gradientBuilder: buildGradient,
-                };
 
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: profile.map(d => d.distance_km),
-                datasets: [datasetConfig],
+                datasets: [{
+                    label: 'Elevation (m)',
+                    data: profile.map(d => d.elevation),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                }],
             },
             options: {
                 responsive: true,
@@ -419,15 +375,15 @@ Alpine.data('elevationChart', (config = {}) => ({
                             label: (ctx) => {
                                 const idx = ctx.dataIndex;
                                 let grad = 0;
-                                if (idx > 0 && idx < this.profile.length) {
-                                    const dElev = this.profile[idx].elevation - this.profile[idx - 1].elevation;
-                                    const dDistM = (this.profile[idx].distance_km - this.profile[idx - 1].distance_km) * 1000;
+                                if (idx > 0 && idx < profile.length) {
+                                    const dElev = profile[idx].elevation - profile[idx - 1].elevation;
+                                    const dDistM = (profile[idx].distance_km - profile[idx - 1].distance_km) * 1000;
                                     if (dDistM > 0) {
                                         grad = (dElev / dDistM) * 100;
                                     }
-                                } else if (idx === 0 && this.profile.length > 1) {
-                                    const dElev = this.profile[1].elevation - this.profile[0].elevation;
-                                    const dDistM = (this.profile[1].distance_km - this.profile[0].distance_km) * 1000;
+                                } else if (idx === 0 && profile.length > 1) {
+                                    const dElev = profile[1].elevation - profile[0].elevation;
+                                    const dDistM = (profile[1].distance_km - profile[0].distance_km) * 1000;
                                     if (dDistM > 0) {
                                         grad = (dElev / dDistM) * 100;
                                     }
@@ -447,17 +403,6 @@ Alpine.data('elevationChart', (config = {}) => ({
                     y: {
                         title: { display: true, text: 'Elevation (m)' },
                         beginAtZero: false,
-                    },
-                },
-                animation: {
-                    onComplete: () => {
-                        if (this.chart && this.chart.scales.x) {
-                            const newGrad = buildGradient(this.chart);
-                            if (newGrad) {
-                                this.chart.data.datasets[0].backgroundColor = newGrad;
-                                this.chart.update('none');
-                            }
-                        }
                     },
                 },
             },
@@ -962,6 +907,7 @@ Alpine.data('singleRouteMap', (config = {}) => ({
             water: '💧',
             cafe: '☕',
             shop: '🔧',
+            mtb: '🚵',
         };
         return L.divIcon({
             className: 'custom-marker',

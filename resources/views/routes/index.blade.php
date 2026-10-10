@@ -115,7 +115,7 @@
             </aside>
 
             <!-- Routes List -->
-            <div class="lg:col-span-3">
+            <div class="lg:col-span-3" x-data>
                 @if($routes->isEmpty())
                     <div class="text-center py-16">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

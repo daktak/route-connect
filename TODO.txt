@@ -5,3 +5,4 @@
 * Add option for user to add telegram bot notification
 * Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
 * Notification of a route or date change for "this" ride, does not say wihch ride, or link to it
+* Meeting point, make a google map link to the co-ords

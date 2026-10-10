@@ -46,7 +46,7 @@
                 </div>
             @endif
         </div>
-
+<!--
         <div>
             <x-input-label for="phone" :value="__('Phone Number')" />
             <x-text-input id="phone" name="phone" type="tel" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
@@ -80,6 +80,7 @@
             <p class="mt-1 text-xs text-gray-500">{{ __('Find your chat ID by messaging @userinfobot on Telegram') }}</p>
             <x-input-error class="mt-2" :messages="$errors->get('telegram_chat_id')" />
         </div>
+        -->
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>

@@ -84,7 +84,7 @@
                         <div class="text-sm text-gray-500">Elevation Gain</div>
                     </div>
                     <div>
-                        <div class="text-2xl font-bold text-gray-900" x-text="preview.estimated_time_min + ' min'"></div>
+                        <div class="text-2xl font-bold text-gray-900" x-text="formatDuration(preview.estimated_time_min)"></div>
                         <div class="text-sm text-gray-500">Est. Time</div>
                     </div>
                 </div>

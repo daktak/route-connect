@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Route;
+use App\Services\GpxGenerator;
 use App\Services\GpxParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -182,8 +183,11 @@ class RouteController extends Controller
             $parsed = $parser->crop($parsed, $startCrop, $endCrop);
         }
 
-        // Store GPX file
-        $path = $gpxFile->store('gpx', 'local');
+        // Generate and store minimal GPX file (only route data)
+        $gpxGenerator = new GpxGenerator;
+        $cleanGpx = $gpxGenerator->generateFromGpxData($parsed['gpx_data'], $request->name);
+        $path = 'gpx/' . uniqid() . '.gpx';
+        \Storage::disk('local')->put($path, $cleanGpx);
 
         $route = DB::transaction(function () use ($request, $parsed, $path) {
             $route = Route::create([

@@ -39,7 +39,7 @@
                                 <div>Elevation Gain</div>
                             </div>
                             <div class="text-center">
-                                <div class="font-semibold text-gray-900">{{ $route->estimated_time_min ?? '—' }} min</div>
+                                <div class="font-semibold text-gray-900">{{ $route->formatted_duration ?? '—' }}</div>
                                 <div>Est. Time</div>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-600">Estimated Time</dt>
-                            <dd class="font-semibold text-gray-900">{{ $route->estimated_time_min ? $route->estimated_time_min . ' min' : '—' }}</dd>
+                            <dd class="font-semibold text-gray-900">{{ $route->formatted_duration ?? '—' }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-600">Difficulty</dt>

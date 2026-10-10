@@ -97,10 +97,9 @@ class GpxParser
         // Build geometry (LineString)
         $geometry = $this->buildGeometry($allPoints);
 
-        // Build GPX data for storage
+        // Build GPX data for storage (minimal - only route data needed)
         $gpxData = [
             'tracks' => $tracks,
-            'waypoints' => $waypoints,
             'bounds' => $bounds,
             'points_count' => count($allPoints),
         ];

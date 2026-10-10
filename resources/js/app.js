@@ -342,6 +342,36 @@ Alpine.data('elevationChart', (config = {}) => ({
             this.chart.destroy();
         }
 
+        // Create gradient fill
+        let bgGradient = null;
+        if (this.profile.length > 1) {
+            bgGradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
+            const totalDist = this.profile[this.profile.length - 1].distance_km - this.profile[0].distance_km;
+            if (totalDist > 0) {
+                // Add color at each segment boundary
+                for (let i = 0; i < this.profile.length; i++) {
+                    let grad = 0;
+                    if (i === 0) {
+                        if (this.profile.length > 1) {
+                            const dElev = this.profile[1].elevation - this.profile[0].elevation;
+                            const dDistM = (this.profile[1].distance_km - this.profile[0].distance_km) * 1000;
+                            if (dDistM > 0) grad = (dElev / dDistM) * 100;
+                        }
+                    } else {
+                        const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
+                        const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
+                        if (dDistM > 0) grad = (dElev / dDistM) * 100;
+                    }
+                    const t = (this.profile[i].distance_km - this.profile[0].distance_km) / totalDist;
+                    let color = 'rgba(37, 99, 235, 0.15)';
+                    if (grad > 5) color = 'rgba(239, 68, 68, 0.25)';
+                    else if (grad > 2) color = 'rgba(245, 158, 11, 0.25)';
+                    else if (grad < -2) color = 'rgba(34, 197, 94, 0.25)';
+                    bgGradient.addColorStop(Math.max(0, Math.min(1, t)), color);
+                }
+            }
+        }
+
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -350,7 +380,7 @@ Alpine.data('elevationChart', (config = {}) => ({
                     label: 'Elevation (m)',
                     data: this.profile.map(d => d.elevation),
                     borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    backgroundColor: bgGradient || 'rgba(37, 99, 235, 0.1)',
                     fill: true,
                     tension: 0.3,
                     pointRadius: 0,
@@ -368,8 +398,26 @@ Alpine.data('elevationChart', (config = {}) => ({
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: ctx => `Elevation: ${ctx.raw}m`,
-                            title: ctx => `Distance: ${ctx[0].label} km`,
+                            label: (ctx) => {
+                                const idx = ctx.dataIndex;
+                                let grad = 0;
+                                if (idx > 0 && idx < this.profile.length) {
+                                    const dElev = this.profile[idx].elevation - this.profile[idx - 1].elevation;
+                                    const dDistM = (this.profile[idx].distance_km - this.profile[idx - 1].distance_km) * 1000;
+                                    if (dDistM > 0) {
+                                        grad = (dElev / dDistM) * 100;
+                                    }
+                                } else if (idx === 0 && this.profile.length > 1) {
+                                    const dElev = this.profile[1].elevation - this.profile[0].elevation;
+                                    const dDistM = (this.profile[1].distance_km - this.profile[0].distance_km) * 1000;
+                                    if (dDistM > 0) {
+                                        grad = (dElev / dDistM) * 100;
+                                    }
+                                }
+                                const gradStr = grad >= 0 ? '+' + grad.toFixed(1) + '%' : grad.toFixed(1) + '%';
+                                return 'Elevation: ' + ctx.raw + 'm | Grade: ' + gradStr;
+                            },
+                            title: ctx => 'Distance: ' + ctx[0].label + ' km',
                         },
                     },
                 },
@@ -725,6 +773,8 @@ Alpine.data('routePreviewMap', () => ({
     map: null,
     layer: null,
     geometry: null,
+    hasFitInitial: false,
+    userInteracted: false,
 
     init() {
         this.map = L.map(this.$el, {
@@ -738,6 +788,12 @@ Alpine.data('routePreviewMap', () => ({
         }).addTo(this.map);
 
         this.layer = L.featureGroup().addTo(this.map);
+        this.map.on('zoomstart movestart dragstart', () => { this.userInteracted = true; });
+        document.addEventListener('gpx-new-file', () => {
+            this.userInteracted = false;
+            this.hasFitInitial = false;
+            this.render();
+        });
         this.$watch('geometry', () => this.render());
 
         if (typeof ResizeObserver !== 'undefined') {
@@ -748,7 +804,7 @@ Alpine.data('routePreviewMap', () => ({
         this.render();
     },
 
-render() {
+    render() {
         this.layer.clearLayers();
         let coordinates = [];
         if (this.geometry) {
@@ -779,7 +835,12 @@ render() {
                 }).bindTooltip('End').addTo(this.layer);
             }
         }
-        this.queueFit();
+        if (!this.userInteracted && !this.hasFitInitial) {
+            this.queueFit();
+            this.hasFitInitial = true;
+        } else {
+            this.map.invalidateSize();
+        }
     },
 
     queueFit() {
@@ -1055,6 +1116,7 @@ Alpine.data('gpxUpload', () => ({
                 this.endCrop = 0;
                 this.recompute();
                 this.$dispatch('gpx-parsed', { preview: this.preview });
+                document.dispatchEvent(new CustomEvent('gpx-new-file'));
             } else {
                 const error = await response.json();
                 this.error = error.message || 'Failed to parse GPX';
@@ -1126,6 +1188,15 @@ Alpine.data('gpxUpload', () => ({
         if (score < 10) return 'hard';
         return 'expert';
     },
+    formatDuration(min) {
+        if (!min || min < 0) return '—';
+        if (min < 60) return min + ' min';
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        if (m === 0) return h + 'h';
+        return h + 'h ' + m + 'm';
+    },
+
 
     haversineKm(lat1, lon1, lat2, lon2) {
         const R = 6371;

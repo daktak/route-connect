@@ -157,4 +157,22 @@ class Route extends Model
 
         return $coordinates ? ['type' => 'LineString', 'coordinates' => $coordinates] : null;
     }
+
+    public function getFormattedDurationAttribute(): string
+    {
+        $min = $this->estimated_time_min;
+        if (! $min || $min < 0) {
+            return '—';
+        }
+        if ($min < 60) {
+            return $min.' min';
+        }
+        $h = intdiv($min, 60);
+        $m = $min % 60;
+        if ($m === 0) {
+            return $h.'h';
+        }
+
+        return $h.'h '.$m.'m';
+    }
 }

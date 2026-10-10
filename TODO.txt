@@ -5,6 +5,4 @@
 * Add option for user to add telegram bot notification
 * In the ride schedule, show the sun up or sun down time if the meeting time is before sun up, or the duration extends past sundown. Indicate the rider should bring a light
 * Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
-* Show distance from current location to meeting point on Ride Details page, if location is shared
 * Notification of a route or date change for "this" ride, does not say wihch ride, or link to it
-* Group ride details is showing duration in minutes instead of the existing helper that formats to hours and minutes

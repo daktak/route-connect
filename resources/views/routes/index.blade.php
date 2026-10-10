@@ -198,19 +198,8 @@
                     <div x-show="$store.viewMode.mode === 'list'" x-cloak class="space-y-3">
                         @foreach($routes as $route)
                             <article class="route-list-item flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
-                                <div class="w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden relative bg-gray-100">
-                                    @if($route->geometry)
-                                        <div class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, interactive: false })"></div>
-                                    @else
-                                        <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                        </div>
-                                    @endif
-                                    <div class="absolute top-1 right-1">
-                                        <span class="difficulty-badge {{ $route->difficulty }} text-xs">{{ ucfirst($route->difficulty ?? '?') }}</span>
-                                    </div>
+                                <div class="w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    <span class="difficulty-badge {{ $route->difficulty }}">{{ ucfirst($route->difficulty ?? 'unknown') }}</span>
                                 </div>
 
                                 <div class="flex-1 min-w-0">

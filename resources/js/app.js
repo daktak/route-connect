@@ -952,6 +952,12 @@ Alpine.data('singleRouteMap', (config = {}) => ({
         this.$watch('features', () => this.renderFeatures());
         this.renderRoute();
         this.renderFeatures();
+
+        // The container may be hidden (x-cloak / x-show) while the map is
+        // created, leaving Leaflet with an incorrect size. Re-measure once it
+        // is visible so the tiles render fully.
+        this.$nextTick(() => this.map?.invalidateSize());
+        this.$watch('$store.viewMode.mode', () => this.map?.invalidateSize());
     },
 
     renderRoute() {

@@ -348,26 +348,34 @@ Alpine.data('elevationChart', (config = {}) => ({
             bgGradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
             const totalDist = this.profile[this.profile.length - 1].distance_km - this.profile[0].distance_km;
             if (totalDist > 0) {
-                // Add color at each segment boundary
-                for (let i = 0; i < this.profile.length; i++) {
-                    let grad = 0;
-                    if (i === 0) {
-                        if (this.profile.length > 1) {
-                            const dElev = this.profile[1].elevation - this.profile[0].elevation;
-                            const dDistM = (this.profile[1].distance_km - this.profile[0].distance_km) * 1000;
-                            if (dDistM > 0) grad = (dElev / dDistM) * 100;
+                // Helper to get gradient at a distance
+                const getGradAt = (distKm) => {
+                    // Find segment containing this distance
+                    for (let i = 1; i < this.profile.length; i++) {
+                        if (this.profile[i].distance_km >= distKm) {
+                            const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
+                            const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
+                            return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
                         }
-                    } else {
-                        const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
-                        const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
-                        if (dDistM > 0) grad = (dElev / dDistM) * 100;
                     }
-                    const t = (this.profile[i].distance_km - this.profile[0].distance_km) / totalDist;
+                    // Past end, use last segment
+                    const i = this.profile.length - 1;
+                    const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
+                    const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
+                    return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
+                };
+
+                // Add color stops at many evenly spaced points across full distance
+                const numStops = Math.min(100, this.profile.length * 2);
+                for (let j = 0; j <= numStops; j++) {
+                    const distKm = this.profile[0].distance_km + (totalDist * j / numStops);
+                    const grad = getGradAt(distKm);
+                    const t = j / numStops;
                     let color = 'rgba(37, 99, 235, 0.15)';
                     if (grad > 5) color = 'rgba(239, 68, 68, 0.25)';
                     else if (grad > 2) color = 'rgba(245, 158, 11, 0.25)';
                     else if (grad < -2) color = 'rgba(34, 197, 94, 0.25)';
-                    bgGradient.addColorStop(Math.max(0, Math.min(1, t)), color);
+                    bgGradient.addColorStop(t, color);
                 }
             }
         }

@@ -66,8 +66,20 @@ class RideController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $preselectedRouteId = $request->query('route');
+
+        if ($preselectedRouteId) {
+            $route = Route::public()->findOrFail($preselectedRouteId);
+            $coordinates = $route->geometry['coordinates'] ?? [];
+            $start = $coordinates[0] ?? null;
+            $route->start_lat = $start[1] ?? null;
+            $route->start_lng = $start[0] ?? null;
+
+            return view('rides.create', compact('route'));
+        }
+
         $routes = Route::public()
             ->orderBy('name')
             ->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty', 'gpx_data']);

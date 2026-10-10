@@ -4,7 +4,7 @@
     $temp = $weather['temperature'] !== null ? round($weather['temperature']) . '°' : '—';
     $rain = $weather['precip_probability'] !== null ? round($weather['precip_probability']) . '%' : '—';
     $wind = $weather['wind_speed'] !== null ? round($weather['wind_speed']) . ' km/h' : '—';
-    $forecastTime = $weather['time']->format('M j, g:i A') . ' UTC';
+    $forecastTime = $weather['time']->setTimezone(config('app.timezone'))->format('M j, g:i A');
     $tooltip = 'Forecast' . ($location ? ' for ' . $location : '') . ' at ' . $forecastTime . ' · Weather data by Open-Meteo.com';
 @endphp
 

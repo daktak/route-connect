@@ -5,14 +5,34 @@
                 <h1 class="text-3xl font-bold text-gray-900">Routes Map</h1>
                 <p class="text-gray-600 mt-1">Explore routes on the map</p>
             </div>
-            @auth
-                <a href="{{ route('routes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Route
-                </a>
-            @endauth
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
+                @auth
+                    <a href="{{ route('routes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Route
+                    </a>
+                @endauth
+                <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1" x-data>
+                    <button @click="$store.viewMode.set('card')"
+                            :class="$store.viewMode.mode === 'card' ? 'bg-white text-primary shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            title="Card view">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                    </button>
+                    <button @click="$store.viewMode.set('list')"
+                            :class="$store.viewMode.mode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            title="List view">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </x-slot>
 

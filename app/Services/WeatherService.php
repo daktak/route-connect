@@ -20,6 +20,11 @@ class WeatherService
         'wind_gusts_10m',
     ];
 
+    private const DAILY = [
+        'sunrise',
+        'sunset',
+    ];
+
     /**
      * Resolve a forecast for each ride, batched into a single API request.
      *
@@ -112,7 +117,8 @@ class WeatherService
                     'latitude' => implode(',', $lats),
                     'longitude' => implode(',', $lngs),
                     'hourly' => implode(',', self::HOURLY),
-                    'timezone' => 'UTC',
+                    'daily' => implode(',', self::DAILY),
+                    'timezone' => 'auto',
                     'timeformat' => 'unixtime',
                     'forecast_days' => config('services.open_meteo.forecast_days', 16),
                 ]
@@ -141,19 +147,26 @@ class WeatherService
                 continue;
             }
 
-            Cache::put($key, $entry['hourly'], config('services.open_meteo.cache_ttl', 1800));
-            $result[$key] = $entry['hourly'];
+            $cached = [
+                'hourly' => $entry['hourly'],
+                'daily' => $entry['daily'] ?? [],
+            ];
+            Cache::put($key, $cached, config('services.open_meteo.cache_ttl', 1800));
+            $result[$key] = $cached;
         }
 
         return $result;
     }
 
     /**
-     * @param  array<string, array<int, mixed>>  $hourly
+     * @param  array{hourly: array<string, array<int, mixed>>, daily: array<string, array<int, string>>}  $data
      * @return array<string, mixed>|null
      */
-    private function forecastForRide(GroupRide $ride, array $hourly): ?array
+    private function forecastForRide(GroupRide $ride, array $data): ?array
     {
+        $hourly = $data['hourly'] ?? [];
+        $daily = $data['daily'] ?? [];
+
         $times = $hourly['time'] ?? [];
         if (empty($times)) {
             return null;
@@ -168,6 +181,19 @@ class WeatherService
 
         $code = (int) ($hourly['weather_code'][$index] ?? 0);
 
+        // Extract sunrise/sunset for the ride date from daily data
+        $sunrise = null;
+        $sunset = null;
+        $dailyTimes = $daily['time'] ?? [];
+        if (! empty($dailyTimes)) {
+            $rideTimestamp = $ride->ride_date->startOfDay()->getTimestamp();
+            $dayIndex = $this->closestIndex($dailyTimes, $rideTimestamp);
+            if ($dayIndex !== null && isset($daily['sunrise'][$dayIndex], $daily['sunset'][$dayIndex])) {
+                $sunrise = Carbon::createFromTimestamp((int) $daily['sunrise'][$dayIndex], 'UTC');
+                $sunset = Carbon::createFromTimestamp((int) $daily['sunset'][$dayIndex], 'UTC');
+            }
+        }
+
         return [
             'temperature' => $this->round($hourly['temperature_2m'][$index] ?? null),
             'apparent' => $this->round($hourly['apparent_temperature'][$index] ?? null),
@@ -178,6 +204,8 @@ class WeatherService
             'condition' => $this->conditionLabel($code),
             'icon' => $this->conditionIcon($code),
             'time' => Carbon::createFromTimestamp((int) $times[$index], 'UTC'),
+            'sunrise' => $sunrise,
+            'sunset' => $sunset,
         ];
     }
 

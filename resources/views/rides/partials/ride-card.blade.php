@@ -39,13 +39,23 @@
                 $sunrise = \Carbon\Carbon::parse($ride->weather['sunrise'])->setTimezone(config('app.timezone'));
                 $sunset = \Carbon\Carbon::parse($ride->weather['sunset'])->setTimezone(config('app.timezone'));
                 $rideTime = $ride->ride_date;
-                $showLightWarning = $rideTime->lt($sunrise) || $rideTime->gt($sunset);
+                $duration = $ride->route->estimated_time_min ?? 0;
+                $rideEnd = $rideTime->copy()->addMinutes($duration);
+                
+                $beforeSunrise = $rideTime->lt($sunrise);
+                $afterSunset = $rideEnd->gt($sunset);
+                $showLightWarning = $beforeSunrise || $afterSunset;
+                
+                // Show relevant time: sunrise if before sunrise, otherwise sunset
+                $showSunrise = $beforeSunrise;
+                $relevantTime = $showSunrise ? $sunrise : $sunset;
+                $timeLabel = $showSunrise ? 'Sunrise' : 'Sunset';
             @endphp
             <div class="flex items-center gap-2 text-sm mb-4 {{ $showLightWarning ? 'text-amber-600 bg-amber-50 px-2 py-1 rounded' : 'text-gray-500' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                <span>Sunrise {{ $sunrise->format('g:i A') }} • Sunset {{ $sunset->format('g:i A') }}
+                <span>{{ $timeLabel }} {{ $relevantTime->format('g:i A') }}
                     @if($showLightWarning)
                         <span class="font-medium ml-2">⚠ Bring a light</span>
                     @endif

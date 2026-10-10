@@ -3,6 +3,5 @@
 * Add route download/wahoo sync option to group ride details page
 * Add option for user to opt in to email notifications
 * Add option for user to add telegram bot notification
-* In the ride schedule, show the sun up or sun down time if the meeting time is before sun up, or the duration extends past sundown. Indicate the rider should bring a light
 * Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
 * Notification of a route or date change for "this" ride, does not say wihch ride, or link to it

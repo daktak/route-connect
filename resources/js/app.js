@@ -240,7 +240,7 @@ Alpine.data('routeMap', (config = {}) => ({
     getDifficultyColor(difficulty) {
         const colors = {
             easy: '#16a34a',
-            moderate: '#f59e0b',
+            moderate: '#b45309',
             hard: '#ea580c',
             expert: '#dc2626',
         };
@@ -1001,7 +1001,7 @@ Alpine.data('singleRouteMap', (config = {}) => ({
     getDifficultyColor(difficulty) {
         const colors = {
             easy: '#16a34a',
-            moderate: '#f59e0b',
+            moderate: '#b45309',
             hard: '#ea580c',
             expert: '#dc2626',
         };

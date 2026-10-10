@@ -954,10 +954,27 @@ Alpine.data('singleRouteMap', (config = {}) => ({
         this.renderFeatures();
 
         // The container may be hidden (x-cloak / x-show) while the map is
-        // created, leaving Leaflet with an incorrect size. Re-measure once it
-        // is visible so the tiles render fully.
-        this.$nextTick(() => this.map?.invalidateSize());
-        this.$watch('$store.viewMode.mode', () => this.map?.invalidateSize());
+        // created, leaving Leaflet with a zero-size pane: fitBounds then
+        // computes an extreme zoom and the route does not fit the tile.
+        // Re-measure and re-fit once the container actually has real size.
+        this.$nextTick(() => this.refreshMap());
+        this.$watch('$store.viewMode.mode', () => this.refreshMap());
+    },
+
+    refreshMap(attempt = 0) {
+        if (!this.map) return;
+        this.map.invalidateSize();
+        if (!this.routeLayer || this.routeLayer.getLayers().length === 0) return;
+
+        const width = this.$el.offsetWidth;
+        const height = this.$el.offsetHeight;
+        if ((width === 0 || height === 0) && attempt < 60) {
+            setTimeout(() => this.refreshMap(attempt + 1), 50);
+            return;
+        }
+        if (width > 0 && height > 0) {
+            this.map.fitBounds(this.routeLayer.getBounds(), { padding: [20, 20] });
+        }
     },
 
     renderRoute() {

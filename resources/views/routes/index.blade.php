@@ -5,14 +5,34 @@
                 <h1 class="text-3xl font-bold text-gray-900">Cycling Routes</h1>
                 <p class="text-gray-600 mt-1">Discover and share cycling routes</p>
             </div>
-            @auth
-                <a href="{{ route('routes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Route
-                </a>
-            @endauth
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-start sm:items-center">
+                @auth
+                    <a href="{{ route('routes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Route
+                    </a>
+                @endauth
+                <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1" x-data>
+                    <button @click="$store.viewMode.set('card')"
+                            :class="$store.viewMode.mode === 'card' ? 'bg-white text-primary shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            title="Card view">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                    </button>
+                    <button @click="$store.viewMode.set('list')"
+                            :class="$store.viewMode.mode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+                            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            title="List view">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </x-slot>
 
@@ -108,7 +128,8 @@
                         @endauth
                     </div>
                 @else
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="routes-list">
+                    <!-- Card View -->
+                    <div x-show="$store.viewMode.mode === 'card'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @foreach($routes as $route)
                             <article class="route-card group">
                                 <div class="aspect-video bg-gray-100 relative overflow-hidden">
@@ -168,6 +189,66 @@
                                         <a href="{{ route('routes.show', $route) }}" class="text-sm text-primary hover:underline font-medium">View Details</a>
                                         <span class="text-xs text-gray-500">by {{ $route->user->name }}</span>
                                     </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    <!-- List View -->
+                    <div x-show="$store.viewMode.mode === 'list'" x-cloak class="space-y-3">
+                        @foreach($routes as $route)
+                            <article class="route-list-item flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                                <div class="w-28 h-20 flex-shrink-0 rounded-lg overflow-hidden relative bg-gray-100">
+                                    @if($route->geometry)
+                                        <div class="absolute inset-0" x-data="singleRouteMap({ geometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }}, interactive: false })"></div>
+                                    @else
+                                        <div class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                    <div class="absolute top-1 right-1">
+                                        <span class="difficulty-badge {{ $route->difficulty }} text-xs">{{ ucfirst($route->difficulty ?? '?') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-medium text-gray-900 truncate">{{ $route->name }}</h3>
+                                    <p class="text-sm text-gray-500 truncate">{{ $route->description }}</p>
+                                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600 mt-1">
+                                        <span class="flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                                            {{ $route->distance_km }} km
+                                        </span>
+                                        <span class="flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                            {{ $route->elevation_gain_m }}m
+                                        </span>
+                                        @if($route->estimated_time_min)
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                {{ $route->formatted_duration }}
+                                            </span>
+                                        @endif
+                                        @if($route->avg_rating > 0)
+                                            <span class="flex items-center gap-1 text-yellow-600">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                                {{ number_format($route->avg_rating, 1) }} ({{ $route->rating_count }})
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if($route->features->count())
+                                        <div class="flex flex-wrap gap-1.5 mt-2">
+                                            @foreach($route->features as $feature)
+                                                <span class="feature-badge {{ $feature->feature_type }} text-xs">{{ $feature->icon }} {{ $feature->label }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="flex-shrink-0">
+                                    <a href="{{ route('routes.show', $route) }}" class="text-sm text-primary hover:underline font-medium">View Details</a>
                                 </div>
                             </article>
                         @endforeach

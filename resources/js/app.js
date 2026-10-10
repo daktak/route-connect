@@ -1313,8 +1313,20 @@ Alpine.data('gpxUpload', () => ({
         if (!this.customFeatures.includes(value)) {
             this.customFeatures.push(value);
         }
-        this.customFeature = '';
+this.customFeature = '';
     },
 }));
+
+Alpine.store('viewMode', {
+    mode: 'card',
+    init() {
+        const cookieMatch = document.cookie.match(/routes_view_mode=([^;]+)/);
+        this.mode = cookieMatch ? cookieMatch[1] : 'card';
+    },
+    set(mode) {
+        this.mode = mode;
+        document.cookie = `routes_view_mode=${mode};path=/;max-age=31536000;SameSite=Lax`;
+    },
+});
 
 Alpine.start();

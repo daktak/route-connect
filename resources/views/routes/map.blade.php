@@ -39,7 +39,7 @@
                     <div x-data="routeFilters" class="p-4 overflow-y-auto flex-1">
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                            <input type="text" x-model.debounce.500ms="filters.search" placeholder="Search routes..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <input type="text" x-model="filters.search" placeholder="Search routes..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
 
                         <div class="mb-4">
@@ -76,6 +76,8 @@
                                 <option value="rating_desc">Highest Rated</option>
                             </select>
                         </div>
+
+                        <button @click="applyFilters" class="w-full bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-hover transition-colors mb-3">Apply Filters</button>
 
                         <button @click="clearFilters" x-show="hasActiveFilters()" class="w-full text-sm text-primary hover:underline font-medium">Clear filters</button>
                     </div>

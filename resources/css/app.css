@@ -60,6 +60,7 @@
 .feature-badge.water { @apply bg-cyan-100 text-cyan-800; }
 .feature-badge.cafe { @apply bg-orange-100 text-orange-800; }
 .feature-badge.shop { @apply bg-indigo-100 text-indigo-800; }
+.feature-badge.mtb { @apply bg-lime-100 text-lime-800; }
 .feature-badge.custom { @apply bg-pink-100 text-pink-800; }
 
 /* Rating stars */

@@ -60,8 +60,6 @@ Alpine.data('routeFilters', () => ({
         if (this.filters.features.length === 0) {
             this.filters.features = this.availableFeatures.map(f => f.value);
         }
-
-        this.$watch('filters', () => this.applyFilters(), { deep: true });
     },
 
     applyFilters() {
@@ -98,6 +96,7 @@ Alpine.data('routeFilters', () => ({
                 ? this.availableFeatures.map(f => f.value)
                 : (key === 'sort' ? 'newest' : '');
         });
+        this.applyFilters();
     },
 
     hasActiveFilters() {

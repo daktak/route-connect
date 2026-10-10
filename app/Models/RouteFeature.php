@@ -31,6 +31,7 @@ class RouteFeature extends Model
         'water' => 'Water Crossings',
         'cafe' => 'Cafe Stops',
         'shop' => 'Bike Shop Nearby',
+        'mtb' => 'Mountain Bike',
         'custom' => 'Custom Feature',
     ];
 
@@ -55,6 +56,7 @@ class RouteFeature extends Model
             'water' => '💧',
             'cafe' => '☕',
             'shop' => '🔧',
+            'mtb' => '⛰️',
             'custom' => '⭐',
             default => '📍',
         };

@@ -122,7 +122,13 @@ Ride Created (v1) → Users Join (stored with v1)
 - RidePolicy: organizer can edit/cancel, attendees can leave
 - CommentPolicy: author can edit/delete own comments
 
-### 5. Weather Forecasts
+### 5. Card Map Thumbnails in Hidden Containers
+- The routes index renders a Leaflet map per route card; both the card grid and list are `x-cloak`/`x-show` toggled on the shared `viewMode` store
+- Maps created while their container is hidden get a zero-size pane: `fitBounds` locks a max-extreme zoom and tiles only fill a corner
+- `singleRouteMap.refreshMap()` re-measures (`invalidateSize()`) and re-fits the route bounds once the container has real dimensions (polled via `offsetWidth`/`offsetHeight`), then again on every layout toggle
+- Alpine roots: views that rely on `x-show`/`x-cloak` must sit under an `x-data` element — plain containers are skipped by Alpine's tree walk, leaving `x-cloak` applied
+
+### 6. Weather Forecasts
 - Upcoming group rides show a forecast for their **start time and location**
 - `App\Services\WeatherService` resolves the location from the meeting point, falling back to the route start (`ST_StartPoint(geometry)`)
 - All rides on a page are batched into a single Open-Meteo request; results are cached per location + hour (`WEATHER_CACHE_TTL`, default 30 min)
@@ -174,7 +180,8 @@ Ride Created (v1) → Users Join (stored with v1)
 ### Alpine.js Components
 - `route-filters` - Route filter sidebar (distance, elevation, difficulty, features); all features selected by default
 - `route-map` - Leaflet map with route layers, feature markers
-- `route-map` (single) / `routeMap` - Ride detail map rendering route geometry and meeting-point marker
+- `route-map` (single) / `routeMap` - Ride detail map rendering route geometry and meeting-point marker; also renders card thumbnails on the routes index
+- `viewMode` (store) - Shared card/list layout preference, persisted in the `routes_view_mode` cookie and read at Alpine startup
 - `elevation-chart` - Chart.js elevation profile
 - `meeting-point-picker` - Click-to-set meeting point with Nominatim reverse geocoding (name lookup only fills an empty field)
 - `route-select` - Create-ride route dropdown that seeds the meeting point from the route start

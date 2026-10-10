@@ -5,7 +5,7 @@ A Laravel web application for cyclists to share routes, discover rides, and coor
 ## Features
 
 - **GPX Route Upload** - Drag & drop GPX files, automatic parsing with distance/elevation calculation
-- **Route Discovery** - Filterable list and interactive map view with OpenStreetMap
+- **Route Discovery** - Filterable list and interactive map view with OpenStreetMap; toggle between card and list layouts (preference persisted in a cookie)
 - **Feature Marking** - Tag routes with checkboxes (gravel, steep, scenic, technical, etc.)
 - **Social Features** - Rate routes (1-5 stars), threaded comments
 - **Group Ride Coordination** - Create rides, join/leave, automatic attendee clearing when route/date changes
@@ -211,6 +211,9 @@ When organizer changes **route** or **date**:
 
 ### GPX Processing
 `GpxParser` parses GPX synchronously on upload → extracts track points → computes distance/elevation → stores PostGIS LINESTRING + JSONB.
+
+### Route View Toggle
+The routes index page offers card and list layouts. The choice is stored in a `routes_view_mode` cookie (1-year, default `card`) and shared across routes pages; card thumbnails render a Leaflet fit to the route, while list rows show a compact difficulty badge instead of a map. Maps created in hidden containers re-fit themselves once they become visible.
 
 ## Environment Variables
 

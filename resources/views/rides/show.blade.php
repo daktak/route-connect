@@ -155,7 +155,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Est. Time</span>
-                            <span class="font-semibold">{{ $ride->route->estimated_time_min ?? '—' }} min</span>
+                            <span class="font-semibold">{{ $ride->route->formatted_duration ?? '—' }}</span>
                         </div>
                     </div>
                     <a href="{{ route('routes.show', $ride->route) }}" class="mt-4 block text-center text-primary hover:underline text-sm">View Route Details</a>

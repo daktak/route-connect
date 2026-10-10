@@ -342,43 +342,61 @@ Alpine.data('elevationChart', (config = {}) => ({
             this.chart.destroy();
         }
 
-        // Create gradient fill
+        // Create gradient fill - use plugin to align with chart area after layout
         let bgGradient = null;
-        if (this.profile.length > 1) {
-            bgGradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
-            const totalDist = this.profile[this.profile.length - 1].distance_km - this.profile[0].distance_km;
-            if (totalDist > 0) {
-                // Helper to get gradient at a distance
-                const getGradAt = (distKm) => {
-                    // Find segment containing this distance
-                    for (let i = 1; i < this.profile.length; i++) {
-                        if (this.profile[i].distance_km >= distKm) {
-                            const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
-                            const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
-                            return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
-                        }
-                    }
-                    // Past end, use last segment
-                    const i = this.profile.length - 1;
-                    const dElev = this.profile[i].elevation - this.profile[i - 1].elevation;
-                    const dDistM = (this.profile[i].distance_km - this.profile[i - 1].distance_km) * 1000;
-                    return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
-                };
+        const profile = this.profile;
+        const totalDist = profile[profile.length - 1].distance_km - profile[0].distance_km;
 
-                // Add color stops at many evenly spaced points across full distance
-                const numStops = Math.min(100, this.profile.length * 2);
-                for (let j = 0; j <= numStops; j++) {
-                    const distKm = this.profile[0].distance_km + (totalDist * j / numStops);
-                    const grad = getGradAt(distKm);
-                    const t = j / numStops;
-                    let color = 'rgba(37, 99, 235, 0.15)';
-                    if (grad > 5) color = 'rgba(239, 68, 68, 0.25)';
-                    else if (grad > 2) color = 'rgba(245, 158, 11, 0.25)';
-                    else if (grad < -2) color = 'rgba(34, 197, 94, 0.25)';
-                    bgGradient.addColorStop(t, color);
+        const getGradAt = (distKm) => {
+            for (let i = 1; i < profile.length; i++) {
+                if (profile[i].distance_km >= distKm) {
+                    const dElev = profile[i].elevation - profile[i - 1].elevation;
+                    const dDistM = (profile[i].distance_km - profile[i - 1].distance_km) * 1000;
+                    return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
                 }
             }
-        }
+            const i = profile.length - 1;
+            const dElev = profile[i].elevation - profile[i - 1].elevation;
+            const dDistM = (profile[i].distance_km - profile[i - 1].distance_km) * 1000;
+            return dDistM > 0 ? (dElev / dDistM) * 100 : 0;
+        };
+
+        const buildGradient = (chart) => {
+            const scale = chart.scales.x;
+            if (!scale) return null;
+            const left = scale.getPixelForValue(profile[0].distance_km);
+            const right = scale.getPixelForValue(profile[profile.length - 1].distance_km);
+            const grad = chart.ctx.createLinearGradient(left, 0, right, 0);
+            const numStops = Math.min(100, profile.length * 2);
+            for (let j = 0; j <= numStops; j++) {
+                const distKm = profile[0].distance_km + (totalDist * j / numStops);
+                const gradVal = getGradAt(distKm);
+                const t = j / numStops;
+                let color = 'rgba(37, 99, 235, 0.15)';
+                if (gradVal > 5) color = 'rgba(239, 68, 68, 0.25)';
+                else if (gradVal > 2) color = 'rgba(245, 158, 11, 0.25)';
+                else if (gradVal < -2) color = 'rgba(34, 197, 94, 0.25)';
+                grad.addColorStop(t, color);
+            }
+            return grad;
+        };
+
+        // Initial dummy gradient (will be replaced by plugin)
+        bgGradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
+        bgGradient.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
+        bgGradient.addColorStop(1, 'rgba(37, 99, 235, 0.15)');
+
+        const datasetConfig = {
+                    label: 'Elevation (m)',
+                    data: profile.map(d => d.elevation),
+                    borderColor: '#2563eb',
+                    backgroundColor: bgGradient,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    _gradientBuilder: buildGradient,
+                };
 
         this.chart = new Chart(ctx, {
             type: 'line',
@@ -404,6 +422,14 @@ Alpine.data('elevationChart', (config = {}) => ({
                 },
                 plugins: {
                     legend: { display: false },
+                    elevationGradient: {
+                        beforeDraw: (chart) => {
+                            const ds = chart.data.datasets[0];
+                            if (ds && ds._gradientBuilder) {
+                                ds.backgroundColor = ds._gradientBuilder(chart);
+                            }
+                        },
+                    },
                     tooltip: {
                         callbacks: {
                             label: (ctx) => {

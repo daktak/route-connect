@@ -1,0 +1,13 @@
+* failure when a user tries to join a group ride, error when clicking "Im in" for a ride created by another user
+* Ensure the elevation profile has colour gradient under the full profile
+* Add ability for each user to link to Wahoo, and sync the gpx to wahoo (next to the download option)
+* Add route download/wahoo sync option to group ride details page
+* Add option for user to opt in to email notifications
+* Add option for user to add telegram bot notification
+* In the ride schedule, show the sun up or sun down time if the meeting time is before sun up, or the duration extends past sundown. Indicate the rider should bring a light
+* Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
+* Clicking add ride on a route detail did not auto fill in the route. It should be fixed to that route and no other route selectable (ie dont show or populate the drop down)
+* Show distance from current location to meeting point on Ride Details page, if location is shared
+* After the start time of a group ride has passed, it should move from Upcoming to Past. Also weather data is no longer required to be stored for it
+* The time of events says 10 hours from now, is this a timezone issue? I'm in AEDT (+10) maybe a setting is needed in .env to indicate host timezone?
+* Notification of a route or date change for "this" ride, does not say wihch ride, or link to it

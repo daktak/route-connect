@@ -411,10 +411,11 @@ Alpine.data('elevationChart', (config = {}) => ({
 }));
 
 // Ride Join Button
-Alpine.data('rideJoin', () => ({
-    ride: null,
-    user: null,
-    status: null,
+Alpine.data('rideJoin', (rideId = null, userId = null, status = null, rideVersion = null) => ({
+    rideId,
+    userId,
+    status,
+    rideVersion,
     loading: false,
 
     init() {
@@ -425,7 +426,9 @@ Alpine.data('rideJoin', () => ({
         if (!this.rideId || !this.userId) return;
 
         try {
-            const response = await fetch(`/rides/${this.rideId}/attendee-status`);
+            const response = await fetch(`/rides/${this.rideId}/attendee-status`, {
+                credentials: 'same-origin',
+            });
             const data = await response.json();
             this.status = data.status;
             this.rideVersion = data.ride_version;
@@ -441,6 +444,7 @@ Alpine.data('rideJoin', () => ({
         try {
             const response = await fetch(`/rides/${this.rideId}/join`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
@@ -450,12 +454,19 @@ Alpine.data('rideJoin', () => ({
             if (response.ok) {
                 this.status = 'confirmed';
                 this.$dispatch('joined-ride', { rideId: this.rideId });
+                window.location.reload();
             } else {
-                const error = await response.json();
-                alert(error.message || 'Failed to join ride');
+                let errorMessage = 'Failed to join ride';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch {
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                }
+                alert(errorMessage);
             }
         } catch (e) {
-            alert('An error occurred');
+            alert('Network error: ' + e.message);
         } finally {
             this.loading = false;
         }
@@ -468,6 +479,7 @@ Alpine.data('rideJoin', () => ({
         try {
             const response = await fetch(`/rides/${this.rideId}/leave`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
@@ -477,9 +489,19 @@ Alpine.data('rideJoin', () => ({
             if (response.ok) {
                 this.status = null;
                 this.$dispatch('left-ride', { rideId: this.rideId });
+                window.location.reload();
+            } else {
+                let errorMessage = 'Failed to leave ride';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch {
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                }
+                alert(errorMessage);
             }
         } catch (e) {
-            alert('An error occurred');
+            alert('Network error: ' + e.message);
         } finally {
             this.loading = false;
         }
@@ -519,7 +541,10 @@ Alpine.data('notificationBell', () => ({
 
     async fetchNotifications() {
         try {
-            const response = await fetch('/notifications', { headers: { Accept: 'application/json' } });
+            const response = await fetch('/notifications', {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' },
+            });
             const data = await response.json();
             this.notifications = data.notifications;
             this.unreadCount = data.unread_count;
@@ -532,6 +557,7 @@ Alpine.data('notificationBell', () => ({
         try {
             await fetch(`/notifications/${id}/read`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                     Accept: 'application/json',
@@ -549,6 +575,7 @@ Alpine.data('notificationBell', () => ({
         try {
             await fetch('/notifications/read-all', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                     Accept: 'application/json',
@@ -589,6 +616,7 @@ Alpine.data('routeRating', (initial = 0, url = '') => ({
         try {
             const response = await fetch(this.url, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -621,6 +649,7 @@ Alpine.data('routeComments', (url = '') => ({
         try {
             const response = await fetch(this.url, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -673,6 +702,7 @@ Alpine.data('commentItem', () => ({
         try {
             const response = await fetch(`/comments/${this.commentId}`, {
                 method: 'PUT',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -698,6 +728,7 @@ Alpine.data('commentItem', () => ({
         try {
             const response = await fetch(`/comments/${this.commentId}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': csrfToken(),
@@ -719,6 +750,7 @@ Alpine.data('commentItem', () => ({
         try {
             const response = await fetch(`/routes/${this.routeId}/comments`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
@@ -1073,6 +1105,7 @@ Alpine.data('gpxUpload', () => ({
 
             const response = await fetch('/api/routes/parse-gpx', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken(),
                 },

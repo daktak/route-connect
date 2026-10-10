@@ -186,7 +186,7 @@ class RouteController extends Controller
         // Generate and store minimal GPX file (only route data)
         $gpxGenerator = new GpxGenerator;
         $cleanGpx = $gpxGenerator->generateFromGpxData($parsed['gpx_data'], $request->name);
-        $path = 'gpx/' . uniqid() . '.gpx';
+        $path = 'gpx/'.uniqid().'.gpx';
         \Storage::disk('local')->put($path, $cleanGpx);
 
         $route = DB::transaction(function () use ($request, $parsed, $path) {

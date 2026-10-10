@@ -89,7 +89,7 @@
                             @php
                                 $attendee = $ride->attendees()->where('user_id', auth()->id())->where('ride_version', $ride->version)->first();
                             @endphp
-                            <div x-data="rideJoin" :ride-id="{{ $ride->id }}" :user-id="{{ auth()->id() }}" :status="{{ Js::from($attendee->status ?? null) }}" :ride-version="{{ $ride->version }}">
+                            <div x-data="rideJoin({{ $ride->id }}, {{ auth()->id() }}, {{ Js::from($attendee->status ?? null) }}, {{ $ride->version }})">
                                 <button @click="toggle()" :disabled="loading" :class="buttonClass + ' px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors'" x-text="buttonText"></button>
                             </div>
                         @else

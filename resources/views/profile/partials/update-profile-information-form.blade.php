@@ -47,6 +47,40 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="phone" :value="__('Phone Number')" />
+            <x-text-input id="phone" name="phone" type="tel" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+        </div>
+
+        <div>
+            <x-input-label for="emergency_contact_name" :value="__('Emergency Contact Name')" />
+            <x-text-input id="emergency_contact_name" name="emergency_contact_name" type="text" class="mt-1 block w-full" :value="old('emergency_contact_name', $user->emergency_contact_name)" autocomplete="name" />
+            <x-input-error class="mt-2" :messages="$errors->get('emergency_contact_name')" />
+        </div>
+
+        <div>
+            <x-input-label for="emergency_contact_phone" :value="__('Emergency Contact Phone')" />
+            <x-text-input id="emergency_contact_phone" name="emergency_contact_phone" type="tel" class="mt-1 block w-full" :value="old('emergency_contact_phone', $user->emergency_contact_phone)" autocomplete="tel" />
+            <x-input-error class="mt-2" :messages="$errors->get('emergency_contact_phone')" />
+        </div>
+
+        <div>
+            <x-input-label for="email_notifications" :value="__('Email Notifications')" />
+            <div class="mt-1 flex items-center gap-2">
+                <input type="checkbox" name="email_notifications" id="email_notifications" class="rounded border-gray-300 text-primary focus:ring-primary" {{ $user->email_notifications ? 'checked' : '' }}>
+                <label for="email_notifications" class="text-sm text-gray-700">{{ __('Receive email notifications for ride updates, comments, and ratings') }}</label>
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('email_notifications')" />
+        </div>
+
+        <div>
+            <x-input-label for="telegram_chat_id" :value="__('Telegram Chat ID')" />
+            <x-text-input id="telegram_chat_id" name="telegram_chat_id" type="text" class="mt-1 block w-full" :value="old('telegram_chat_id', $user->telegram_chat_id)" placeholder="Enter your Telegram chat ID" autocomplete="off" />
+            <p class="mt-1 text-xs text-gray-500">{{ __('Find your chat ID by messaging @userinfobot on Telegram') }}</p>
+            <x-input-error class="mt-2" :messages="$errors->get('telegram_chat_id')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

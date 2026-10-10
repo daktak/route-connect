@@ -600,6 +600,62 @@ Alpine.data('notificationBell', () => ({
     },
 }));
 
+// Haversine distance calculation
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Ride distance to meeting point
+Alpine.data('rideDistance', (meetingPointLat = null, meetingPointLng = null, meetingPointName = '') => ({
+    userLat: null,
+    userLng: null,
+    distanceKm: null,
+    locating: false,
+    error: null,
+
+    init() {
+        if (meetingPointLat && meetingPointLng) {
+            this.locateUser();
+        }
+    },
+
+    locateUser() {
+        if (!navigator.geolocation) {
+            this.error = 'Geolocation not supported';
+            return;
+        }
+        this.locating = true;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                this.userLat = position.coords.latitude;
+                this.userLng = position.coords.longitude;
+                this.distanceKm = haversineDistance(this.userLat, this.userLng, meetingPointLat, meetingPointLng);
+                this.locating = false;
+            },
+            (err) => {
+                this.error = err.code === 1 ? 'Location permission denied' : 'Unable to get location';
+                this.locating = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    },
+
+    get displayText() {
+        if (this.locating) return 'Locating...';
+        if (this.error) return this.error;
+        if (this.distanceKm === null) return '';
+        if (this.distanceKm < 1) return `${Math.round(this.distanceKm * 1000)} m to ${meetingPointName}`;
+        return `${this.distanceKm.toFixed(1)} km to ${meetingPointName}`;
+    },
+}));
+
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }

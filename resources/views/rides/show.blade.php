@@ -50,7 +50,11 @@
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Meeting Point</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->meeting_point_name ?? 'Not specified' }}</dd>
+                            <dd class="font-medium text-gray-900">{{ $ride->meeting_point_name ?? 'Not specified' }}
+                                @if($ride->meeting_point_lat && $ride->meeting_point_lng)
+                                    <div x-data="rideDistance({{ $ride->meeting_point_lat }}, {{ $ride->meeting_point_lng }}, {{ Js::from($ride->meeting_point_name) }})" class="mt-1 text-sm text-gray-500" x-text="displayText"></div>
+                                @endif
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Route</dt>

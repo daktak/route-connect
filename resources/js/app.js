@@ -401,17 +401,8 @@ Alpine.data('elevationChart', (config = {}) => ({
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: this.profile.map(d => d.distance_km),
-                datasets: [{
-                    label: 'Elevation (m)',
-                    data: this.profile.map(d => d.elevation),
-                    borderColor: '#2563eb',
-                    backgroundColor: bgGradient || 'rgba(37, 99, 235, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0,
-                    borderWidth: 2,
-                }],
+                labels: profile.map(d => d.distance_km),
+                datasets: [datasetConfig],
             },
             options: {
                 responsive: true,

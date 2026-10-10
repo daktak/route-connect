@@ -43,6 +43,7 @@ Alpine.data('routeFilters', () => ({
         { value: 'water', label: 'Water Crossings' },
         { value: 'cafe', label: 'Cafe Stops' },
         { value: 'shop', label: 'Bike Shop' },
+        { value: 'mtb', label: 'Mountain Bike' },
     ],
 
     init() {
@@ -398,20 +399,6 @@ Alpine.data('elevationChart', (config = {}) => ({
                     _gradientBuilder: buildGradient,
                 };
 
-        // Register plugin once
-        if (!Chart.elevationGradientRegistered) {
-            Chart.elevationGradientRegistered = true;
-            Chart.register({
-                id: 'elevationGradient',
-                afterLayout: (chart) => {
-                    const ds = chart.data.datasets[0];
-                    if (ds && ds._gradientBuilder) {
-                        ds.backgroundColor = ds._gradientBuilder(chart);
-                    }
-                },
-            });
-        }
-
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -460,6 +447,17 @@ Alpine.data('elevationChart', (config = {}) => ({
                     y: {
                         title: { display: true, text: 'Elevation (m)' },
                         beginAtZero: false,
+                    },
+                },
+                animation: {
+                    onComplete: () => {
+                        if (this.chart && this.chart.scales.x) {
+                            const newGrad = buildGradient(this.chart);
+                            if (newGrad) {
+                                this.chart.data.datasets[0].backgroundColor = newGrad;
+                                this.chart.update('none');
+                            }
+                        }
                     },
                 },
             },

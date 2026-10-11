@@ -11,7 +11,7 @@ under a sub-path such as `https://example.com/RouteConnect`.
 Browser ──► nginx ──► PHP-FPM (8.3) ──► PostgreSQL 16 + PostGIS
                  │
                  └── static assets from public/build
-cron ──► php artisan schedule:run   (ride reminders)
+cron ──► php artisan schedule:run   (ride reminders, ride status updates; optional surface analysis)
 supervisor (optional) ──► php artisan queue:work
 ```
 
@@ -46,6 +46,7 @@ APP_ENV=production
 APP_KEY=            # php artisan key:generate
 APP_DEBUG=false
 APP_URL=https://example.com          # include the sub-path, see section 9
+APP_TIMEZONE=Australia/Melbourne     # keep in sync across web + cron
 
 ADMIN_EMAILS=you@example.com
 
@@ -65,6 +66,23 @@ CACHE_STORE=database
 QUEUE_CONNECTION=database
 ```
 
+Optional integrations (defaults work without changes):
+
+```env
+# Email delivery (only used if/when email notifications are enabled)
+MAIL_MAILER=smtp
+MAIL_HOST=...
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS="hello@example.com"
+
+# Weather + air quality (Open-Meteo) and surface analysis (Valhalla)
+OPEN_METEO_BASE_URL=https://api.open-meteo.com/v1/forecast
+OPEN_METEO_AIR_QUALITY_URL=https://air-quality-api.open-meteo.com/v1/air-quality
+VALHALLA_BASE_URL=https://valhalla1.openstreetmap.de
+```
+
 Then:
 
 ```sh
@@ -75,8 +93,10 @@ php artisan key:generate
 
 ## 4. Database & PostGIS
 
-PostGIS must be created by a superuser **before** migrating (the migration also
-attempts `CREATE EXTENSION`, which requires elevated privileges):
+PostGIS must be created by a superuser **before** migrating: the `routes` table
+is created with a PostGIS `geometry` column and GiST index, so the extension has
+to exist before the first migration runs (a later migration also runs
+`CREATE EXTENSION`, which requires elevated privileges):
 
 ```sh
 sudo -u postgres psql -d routes -c "CREATE EXTENSION IF NOT EXISTS postgis;"
@@ -116,15 +136,28 @@ or config. To clear: `php artisan optimize:clear`.
 
 ## 7. Scheduler and queue
 
-The ride reminder command (`rides:send-reminders`) is scheduled daily at 08:00
-(`routes/console.php`) and requires cron:
+The scheduled commands live in `routes/console.php` and require cron:
+
+- `rides:send-reminders` — daily at 08:00; notifies confirmed attendees about rides starting soon.
+- `rides:mark-past-completed` — daily at 00:05; marks past planned/confirmed rides as completed.
 
 ```cron
 * * * * * cd /var/www/route-connect && php artisan schedule:run >> /dev/null 2>&1
 ```
 
+`routes:analyze-surface` is **not** scheduled. If you want surface percentages
+computed server-side, schedule it yourself (it calls the external Valhalla API,
+so it needs outbound network access):
+
+```cron
+30 3 * * * cd /var/www/route-connect && php artisan routes:analyze-surface --missing >> /dev/null 2>&1
+```
+
 Current notifications use the database channel **synchronously**, so a queue
-worker is not required. If you later queue jobs, run a worker under Supervisor:
+worker is not required. The `email_notifications` / `telegram_chat_id` profile
+preferences are stored but email/Telegram delivery is **not implemented yet** —
+configure `MAIL_*` only when that ships. If you later queue jobs, run a worker
+under Supervisor:
 
 ```ini
 [program:route-connect-queue]
@@ -273,7 +306,7 @@ first if you are debugging).
 3. Log in, then create/join a ride and confirm pages work through the prefix.
 4. Confirm a private GPX download works
    (`/RouteConnect/routes/{id}/download`).
-5. `php artisan schedule:list` shows `rides:send-reminders`.
+5. `php artisan schedule:list` shows `rides:send-reminders` and `rides:mark-past-completed`.
 6. `tail storage/logs/laravel.log` is free of errors.
 
 ## 12. Redeploying

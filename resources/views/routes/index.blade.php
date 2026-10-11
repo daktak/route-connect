@@ -161,7 +161,7 @@
 
                                 <div class="p-4">
                                     <h3 class="font-semibold text-gray-900 mb-1 line-clamp-1">{{ $route->name }}</h3>
-                                    <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ $route->description }}</p>
+                                    <p class="text-sm text-gray-500 mb-3 line-clamp-2 whitespace-pre-line">{{ $route->description }}</p>
 
                                     <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
                                         <span class="flex items-center gap-1">

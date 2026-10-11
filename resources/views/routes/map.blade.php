@@ -136,7 +136,7 @@
                                     <span class="difficulty-badge" :class="selectedRoute ? selectedRoute.difficulty : ''" x-text="selectedRoute ? selectedRoute.difficulty : ''"></span>
                                 </div>
 
-                                <p class="text-sm text-gray-600" x-show="selectedRoute && selectedRoute.description" x-text="selectedRoute ? selectedRoute.description : ''"></p>
+                                <p class="text-sm text-gray-600 whitespace-pre-line" x-show="selectedRoute && selectedRoute.description" x-text="selectedRoute ? selectedRoute.description : ''"></p>
 
                                 <div x-show="selectedRoute && selectedRoute.features && selectedRoute.features.length">
                                     <h4 class="text-sm font-medium text-gray-700 mb-2">Features</h4>

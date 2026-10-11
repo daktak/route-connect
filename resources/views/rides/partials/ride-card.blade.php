@@ -69,7 +69,7 @@
         @endif
 
         @if($ride->description)
-            <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $ride->description }}</p>
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2 whitespace-pre-line">{{ $ride->description }}</p>
         @endif
 
         @if($ride->weather)

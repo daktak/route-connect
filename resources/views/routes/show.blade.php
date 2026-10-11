@@ -94,7 +94,7 @@
                 @if($route->description)
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                        <div class="prose prose-sm max-w-none text-gray-700">{{ $route->description }}</div>
+                        <div class="max-w-none text-gray-700 whitespace-pre-line">{{ $route->description }}</div>
                     </div>
                 @endif
 

@@ -123,7 +123,7 @@
                         @endif
                         <div class="md:col-span-2">
                             <dt class="text-sm text-gray-500">Description</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->description ?? 'No description provided' }}</dd>
+                            <dd class="font-medium text-gray-900 whitespace-pre-line">{{ $ride->description ?? 'No description provided' }}</dd>
                         </div>
                     </dl>
                 </div>

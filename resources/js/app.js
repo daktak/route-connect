@@ -8,6 +8,8 @@ window.Alpine = Alpine;
 window.Chart = Chart;
 window.L = L;
 
+const isAuthenticated = () => document.querySelector('meta[name="user-authenticated"]')?.content === '1';
+
 // Fix Leaflet marker icon paths
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -62,6 +64,27 @@ Alpine.data('routeFilters', () => ({
         }
     },
 
+    save() {
+        if (!isAuthenticated()) return Promise.resolve();
+
+        const features = Array.isArray(this.filters.features) ? this.filters.features : [];
+        const payload = {
+            ...this.filters,
+            features: features.length === this.availableFeatures.length ? [] : features,
+        };
+
+        return fetch('/preferences/route-filters', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({ filters: payload }),
+            keepalive: true,
+        }).catch(() => {});
+    },
+
     applyFilters() {
         const params = new URLSearchParams();
         const allFeatures = this.availableFeatures.map(f => f.value);
@@ -86,7 +109,11 @@ Alpine.data('routeFilters', () => ({
         const currentUrl = window.location.pathname + window.location.search;
 
         if (newUrl !== currentUrl) {
-            window.location.href = newUrl;
+            this.save().finally(() => {
+                window.location.href = newUrl;
+            });
+        } else {
+            this.save();
         }
     },
 
@@ -1430,12 +1457,32 @@ this.customFeature = '';
 Alpine.store('viewMode', {
     mode: 'card',
     init() {
+        const serverMode = document.querySelector('meta[name="route-view-mode"]')?.content;
+
+        if (serverMode === 'card' || serverMode === 'list') {
+            this.mode = serverMode;
+            return;
+        }
+
         const cookieMatch = document.cookie.match(/routes_view_mode=([^;]+)/);
         this.mode = cookieMatch ? cookieMatch[1] : 'card';
     },
     set(mode) {
         this.mode = mode;
         document.cookie = `routes_view_mode=${mode};path=/;max-age=31536000;SameSite=Lax`;
+
+        if (isAuthenticated()) {
+            fetch('/preferences/route-view-mode', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({ view_mode: mode }),
+                keepalive: true,
+            }).catch(() => {});
+        }
     },
 });
 

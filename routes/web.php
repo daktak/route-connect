@@ -11,6 +11,7 @@ use App\Http\Controllers\RideAttendeeController;
 use App\Http\Controllers\RideController;
 use App\Http\Controllers\RideRouteVoteController;
 use App\Http\Controllers\RouteController;
+use App\Http\Controllers\RoutePreferenceController;
 use Illuminate\Support\Facades\Route;
 
 // Home redirects to group rides
@@ -33,6 +34,10 @@ Route::get('/routes/{route}', [RouteController::class, 'show'])->name('routes.sh
 Route::get('/routes/{route}/edit', [RouteController::class, 'edit'])->name('routes.edit')->middleware('auth');
 Route::put('/routes/{route}', [RouteController::class, 'update'])->name('routes.update')->middleware('auth');
 Route::delete('/routes/{route}', [RouteController::class, 'destroy'])->name('routes.destroy')->middleware('auth');
+
+// Route Preferences
+Route::put('/preferences/route-filters', [RoutePreferenceController::class, 'updateFilters'])->name('preferences.route-filters')->middleware('auth');
+Route::put('/preferences/route-view-mode', [RoutePreferenceController::class, 'updateViewMode'])->name('preferences.route-view-mode')->middleware('auth');
 
 // Route Ratings
 Route::post('/routes/{route}/rate', [RatingController::class, 'store'])->name('routes.rate')->middleware('auth');

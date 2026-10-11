@@ -17,6 +17,10 @@ class RouteController extends Controller
 {
     public function index(Request $request)
     {
+        if ($redirect = $this->applySavedFilters($request, 'routes.index')) {
+            return $redirect;
+        }
+
         $query = Route::public()
             ->with(['user', 'features', 'avgRatingModel', 'upcomingRides'])
             ->withCount(['ratings', 'comments']);
@@ -81,6 +85,10 @@ class RouteController extends Controller
 
     public function map(Request $request)
     {
+        if ($redirect = $this->applySavedFilters($request, 'routes.map')) {
+            return $redirect;
+        }
+
         $query = Route::public()->whereNotNull('geometry');
 
         // Apply same filters as index
@@ -140,6 +148,45 @@ class RouteController extends Controller
             'routes' => $routes,
             'mapRoutes' => $mapRoutes,
         ]);
+    }
+
+    /**
+     * Send authenticated users to the given route with their saved filters
+     * applied, when they have not supplied any filter parameters themselves.
+     */
+    private function applySavedFilters(Request $request, string $routeName)
+    {
+        if (! Auth::check()) {
+            return null;
+        }
+
+        $saved = Auth::user()->route_filters;
+
+        if (empty($saved)) {
+            return null;
+        }
+
+        foreach (RoutePreferenceController::FILTER_KEYS as $key) {
+            if ($request->filled($key)) {
+                return null;
+            }
+        }
+
+        $params = collect($saved)
+            ->only(RoutePreferenceController::FILTER_KEYS)
+            ->reject(fn ($value) => $value === null || $value === '' || $value === [])
+            ->reject(fn ($value, $key) => $key === 'sort' && $value === 'newest')
+            ->all();
+
+        if (empty($params)) {
+            return null;
+        }
+
+        if (isset($params['features']) && is_array($params['features'])) {
+            $params['features'] = implode(',', $params['features']);
+        }
+
+        return redirect()->route($routeName, $params);
     }
 
     public function create()

@@ -133,7 +133,9 @@ Ride Created (v1) → Users Join (stored with v1)
 - `App\Services\WeatherService` resolves the location from the meeting point, falling back to the route start (`ST_StartPoint(geometry)`)
 - All rides on a page are batched into a single Open-Meteo request; results are cached per location + hour (`WEATHER_CACHE_TTL`, default 30 min)
 - Forecast horizon is `WEATHER_FORECAST_DAYS` (default 16); past rides and rides beyond the horizon show no weather
-- Rendered as a compact badge on ride cards and a panel on the ride detail page (condition, temperature, rain chance, wind); API failures degrade silently
+- UV index is included from the same Open-Meteo forecast API (`uv_index`, labelled Low→Extreme)
+- Air quality (US AQI, European AQI fallback, PM2.5/PM10) comes from the **separate** Open-Meteo Air Quality API (`OPEN_METEO_AIR_QUALITY_URL`) via `App\Services\AirQualityService`; the CAMS data behind it only spans ~5 days (`AIR_QUALITY_FORECAST_DAYS`, default 5; request clamped to ≤7), so rides further out show no AQI
+- Rendered as a compact badge on ride cards and a panel on the ride detail page (condition, temperature, rain chance, wind, UV index, air quality); API failures degrade silently
 
 ## API Routes Structure
 

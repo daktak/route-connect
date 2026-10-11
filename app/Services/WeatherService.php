@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\GroupRide;
+use App\Services\Concerns\HandlesOpenMeteoData;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherService
 {
+    use HandlesOpenMeteoData;
+
     private const HOURLY = [
         'temperature_2m',
         'apparent_temperature',
@@ -18,6 +21,7 @@ class WeatherService
         'weather_code',
         'wind_speed_10m',
         'wind_gusts_10m',
+        'uv_index',
     ];
 
     private const DAILY = [
@@ -181,6 +185,8 @@ class WeatherService
 
         $code = (int) ($hourly['weather_code'][$index] ?? 0);
 
+        $uv = $this->round($hourly['uv_index'][$index] ?? null);
+
         // Extract sunrise/sunset for the ride date from daily data
         $sunrise = null;
         $sunset = null;
@@ -203,74 +209,28 @@ class WeatherService
             'weather_code' => $code,
             'condition' => $this->conditionLabel($code),
             'icon' => $this->conditionIcon($code),
+            'uv_index' => $uv,
+            'uv_level' => $uv === null ? null : $this->uvLabel($uv),
             'time' => Carbon::createFromTimestamp((int) $times[$index], 'UTC'),
             'sunrise' => $sunrise,
             'sunset' => $sunset,
         ];
     }
 
-    /**
-     * @param  array<int, int|string>  $times
-     */
-    private function closestIndex(array $times, int $target): ?int
-    {
-        $closest = null;
-        $closestDiff = null;
-
-        foreach ($times as $index => $time) {
-            $diff = abs((int) $time - $target);
-            if ($closestDiff === null || $diff < $closestDiff) {
-                $closest = $index;
-                $closestDiff = $diff;
-            }
-        }
-
-        return $closest;
-    }
-
-    private function round(int|float|string|null $value): ?float
-    {
-        return $value === null ? null : round((float) $value, 1);
-    }
-
-    /**
-     * @return array{lat: float, lng: float}|null
-     */
-    private function resolveCoordinates(GroupRide $ride): ?array
-    {
-        if ($ride->meeting_point_lat && $ride->meeting_point_lng) {
-            return [
-                'lat' => (float) $ride->meeting_point_lat,
-                'lng' => (float) $ride->meeting_point_lng,
-            ];
-        }
-
-        $route = $ride->route;
-        if (! $route) {
-            return null;
-        }
-
-        $lat = $route->start_lat ?? null;
-        $lng = $route->start_lng ?? null;
-
-        if (! $lat || ! $lng) {
-            $geometry = $route->geometry ?? [];
-            $coordinates = $geometry['coordinates'] ?? [];
-            $start = $coordinates[0] ?? null;
-            $lat = $start[1] ?? null;
-            $lng = $start[0] ?? null;
-        }
-
-        if (! $lat || ! $lng) {
-            return null;
-        }
-
-        return ['lat' => (float) $lat, 'lng' => (float) $lng];
-    }
-
     private function cacheKey(float $lat, float $lng): string
     {
         return 'weather:'.round($lat, 3).':'.round($lng, 3).':'.now('UTC')->format('Y-m-d-H');
+    }
+
+    private function uvLabel(float $uv): string
+    {
+        return match (true) {
+            $uv < 3 => 'Low',
+            $uv < 6 => 'Moderate',
+            $uv < 8 => 'High',
+            $uv < 11 => 'Very high',
+            default => 'Extreme',
+        };
     }
 
     private function conditionLabel(int $code): string

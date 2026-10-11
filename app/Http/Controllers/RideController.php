@@ -8,6 +8,7 @@ use App\Models\RideAttendee;
 use App\Models\Route;
 use App\Notifications\RideCancelled;
 use App\Notifications\RideChanged;
+use App\Services\AirQualityService;
 use App\Services\WeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,10 @@ class RideController extends Controller
 
         $rides = $query->paginate(15)->withQueryString();
 
-        $rides->getCollection()->each(fn ($ride) => $ride->weather = null);
+        $rides->getCollection()->each(function ($ride) {
+            $ride->weather = null;
+            $ride->airQuality = null;
+        });
 
         $upcoming = $rides->getCollection()
             ->filter(fn ($ride) => $ride->ride_date->isFuture())
@@ -57,6 +61,9 @@ class RideController extends Controller
         if ($upcoming->isNotEmpty()) {
             $weather = app(WeatherService::class)->forRides($upcoming);
             $upcoming->each(fn ($ride) => $ride->weather = $weather[$ride->id] ?? null);
+
+            $airQuality = app(AirQualityService::class)->forRides($upcoming);
+            $upcoming->each(fn ($ride) => $ride->airQuality = $airQuality[$ride->id] ?? null);
         }
 
         return view('rides.index', [
@@ -152,6 +159,10 @@ class RideController extends Controller
 
         $ride->weather = $ride->ride_date->isFuture()
             ? app(WeatherService::class)->forRide($ride)
+            : null;
+
+        $ride->airQuality = $ride->ride_date->isFuture()
+            ? app(AirQualityService::class)->forRide($ride)
             : null;
 
         return view('rides.show', compact('ride'));

@@ -283,6 +283,7 @@
                 @if($ride->weather)
                     @include('rides.partials.weather', [
                         'weather' => $ride->weather,
+                        'airQuality' => $ride->airQuality,
                         'location' => $ride->meeting_point_name ?: $ride->route->name . ' start',
                         'variant' => 'detail',
                     ])

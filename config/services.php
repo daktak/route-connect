@@ -39,6 +39,9 @@ return [
         'base_url' => env('OPEN_METEO_BASE_URL', 'https://api.open-meteo.com/v1/forecast'),
         'cache_ttl' => (int) env('WEATHER_CACHE_TTL', 1800),
         'forecast_days' => (int) env('WEATHER_FORECAST_DAYS', 16),
+        'air_quality_url' => env('OPEN_METEO_AIR_QUALITY_URL', 'https://air-quality-api.open-meteo.com/v1/air-quality'),
+        'air_quality_cache_ttl' => (int) env('AIR_QUALITY_CACHE_TTL', 1800),
+        'air_quality_forecast_days' => (int) env('AIR_QUALITY_FORECAST_DAYS', 5),
     ],
 
     'valhalla' => [

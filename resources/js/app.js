@@ -42,6 +42,7 @@ Alpine.data('routeFilters', () => ({
         { value: 'technical', label: 'Technical' },
         { value: 'scenic', label: 'Scenic' },
         { value: 'road', label: 'Road' },
+        { value: 'bikepath', label: 'Bike Path' },
         { value: 'water', label: 'Water Crossings' },
         { value: 'cafe', label: 'Cafe Stops' },
         { value: 'shop', label: 'Bike Shop' },

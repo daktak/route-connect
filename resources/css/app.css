@@ -57,6 +57,7 @@
 .feature-badge.technical { @apply bg-purple-100 text-purple-800; }
 .feature-badge.scenic { @apply bg-green-100 text-green-800; }
 .feature-badge.road { @apply bg-blue-100 text-blue-800; }
+.feature-badge.bikepath { @apply bg-sky-100 text-sky-800; }
 .feature-badge.water { @apply bg-cyan-100 text-cyan-800; }
 .feature-badge.cafe { @apply bg-orange-100 text-orange-800; }
 .feature-badge.shop { @apply bg-indigo-100 text-indigo-800; }

@@ -351,7 +351,11 @@ class RouteController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download($route->gpx_file_path, "{$route->name}.gpx");
+        return Storage::disk('local')->download(
+            $route->gpx_file_path,
+            "{$route->name}.gpx",
+            ['Content-Type' => 'application/octet-stream']
+        );
     }
 
     private function storeGeometry(Route $route, ?array $geometry): void

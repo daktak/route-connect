@@ -8,21 +8,26 @@ class GpxGenerator
     {
         $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Route Connect"></gpx>');
 
-        $trk = $xml->addChild('trk');
-        $trk->addChild('name', htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8'));
+        $rte = $xml->addChild('rte');
+        $rte->addChild('name', htmlspecialchars($name, ENT_XML1 | ENT_QUOTES, 'UTF-8'));
 
         foreach (($gpxData['tracks'] ?? []) as $track) {
             foreach (($track['segments'] ?? []) as $segment) {
-                $trkseg = $trk->addChild('trkseg');
                 foreach ($segment as $point) {
                     $lon = $point[0] ?? $point['lon'] ?? null;
                     $lat = $point[1] ?? $point['lat'] ?? null;
                     if ($lon === null || $lat === null) {
                         continue;
                     }
-                    $trkpt = $trkseg->addChild('trkpt');
-                    $trkpt->addAttribute('lat', (string) $lat);
-                    $trkpt->addAttribute('lon', (string) $lon);
+
+                    $rtept = $rte->addChild('rtept');
+                    $rtept->addAttribute('lat', (string) $lat);
+                    $rtept->addAttribute('lon', (string) $lon);
+
+                    $ele = $point[2] ?? $point['ele'] ?? null;
+                    if ($ele !== null) {
+                        $rtept->addChild('ele', (string) (float) $ele);
+                    }
                 }
             }
         }

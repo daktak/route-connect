@@ -33,7 +33,7 @@ class GpxParser
                 foreach ($this->xpath($trkseg, 'trkpt', $namespace) as $trkpt) {
                     $lat = (float) $trkpt['lat'];
                     $lon = (float) $trkpt['lon'];
-                    $ele = (float) ($trkpt->ele ?? 0);
+                    $ele = isset($trkpt->ele) ? (float) $trkpt->ele : null;
                     $time = (string) ($trkpt->time ?? '');
 
                     $points[] = [$lon, $lat, $ele];
@@ -168,7 +168,7 @@ class GpxParser
         foreach (($parsed['gpx_data']['tracks'] ?? []) as $track) {
             foreach (($track['segments'] ?? []) as $segment) {
                 foreach ($segment as $point) {
-                    $points[] = [$point[0], $point[1], $point[2] ?? 0];
+                    $points[] = [$point[0], $point[1], $point[2] ?? null];
                 }
             }
         }
@@ -216,6 +216,10 @@ class GpxParser
     {
         $gain = 0;
         for ($i = 1; $i < count($points); $i++) {
+            if ($points[$i][2] === null || $points[$i - 1][2] === null) {
+                continue;
+            }
+
             $diff = $points[$i][2] - $points[$i - 1][2];
             if ($diff > 0) {
                 $gain += $diff;

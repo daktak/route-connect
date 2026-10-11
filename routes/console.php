@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('rides:send-reminders')->dailyAt('08:00');
+Schedule::command('rides:mark-past-completed')->dailyAt('00:05');

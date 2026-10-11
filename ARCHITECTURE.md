@@ -208,6 +208,8 @@ Ride Created (v1) → Users Join (stored with v1)
 
 Notifications are delivered in-app and processed through the database queue (`QUEUE_CONNECTION=database`). GPX parsing is performed synchronously by the `GpxParser` service.
 
+Past `planned`/`confirmed` group rides are auto-marked `completed` by the scheduled `rides:mark-past-completed` command (`routes/console.php`, daily at 00:05); cancelled rides are left untouched.
+
 ## Security Considerations
 
 - CSRF protection on all forms (Laravel default)

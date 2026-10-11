@@ -61,9 +61,21 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm text-gray-500">Route</dt>
+                            @php
+                                $multipleRoutes = $ride->routeOptions->count() > 1;
+                            @endphp
+                            <dt class="text-sm text-gray-500">{{ $multipleRoutes ? 'Routes' : 'Route' }}</dt>
                             <dd class="font-medium text-gray-900">
-                                <a href="{{ route('routes.show', $ride->route) }}" class="text-primary hover:underline">{{ $ride->route->name }}</a>
+                                <ul class="space-y-1">
+                                    @foreach($ride->routeOptions as $option)
+                                        <li class="flex items-center gap-2">
+                                            <a href="{{ route('routes.show', $option->route) }}" class="text-primary hover:underline">{{ $option->route->name }}</a>
+                                            @if($multipleRoutes && $loop->first)
+                                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">Default</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
                             </dd>
                         </div>
                         <div>
@@ -238,27 +250,34 @@
             <!-- Sidebar -->
             <aside class="lg:col-span-1 space-y-6">
                 <!-- Route Info Card -->
+                @php
+                    $leadingRoute = $ride->leadingRoute();
+                    $hasMultipleRoutes = $ride->routeOptions->count() > 1;
+                @endphp
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Info</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $hasMultipleRoutes ? 'Leading Route' : 'Route Info' }}</h3>
+                    <p class="font-medium text-gray-900 mb-3">
+                        <a href="{{ route('routes.show', $leadingRoute) }}" class="text-primary hover:underline">{{ $leadingRoute->name }}</a>
+                    </p>
                     <div class="space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Distance</span>
-                            <span class="font-semibold">{{ $ride->route->distance_km }} km</span>
+                            <span class="font-semibold">{{ $leadingRoute->distance_km }} km</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Elevation Gain</span>
-                            <span class="font-semibold">{{ $ride->route->elevation_gain_m }} m</span>
+                            <span class="font-semibold">{{ $leadingRoute->elevation_gain_m }} m</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Difficulty</span>
-                            <span class="difficulty-badge {{ $ride->route->difficulty }}">{{ ucfirst($ride->route->difficulty) }}</span>
+                            <span class="difficulty-badge {{ $leadingRoute->difficulty }}">{{ ucfirst($leadingRoute->difficulty) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Est. Time</span>
-                            <span class="font-semibold">{{ $ride->route->formatted_duration ?? '—' }}</span>
+                            <span class="font-semibold">{{ $leadingRoute->formatted_duration ?? '—' }}</span>
                         </div>
                     </div>
-                    <a href="{{ route('routes.show', $ride->route) }}" class="mt-4 block text-center text-primary hover:underline text-sm">View Route Details</a>
+                    <a href="{{ route('routes.show', $leadingRoute) }}" class="mt-4 block text-center text-primary hover:underline text-sm">View Route Details</a>
                 </div>
 
                 @if($ride->weather)

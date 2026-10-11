@@ -120,6 +120,20 @@ class GroupRide extends Model
             ->first()?->route_id;
     }
 
+    public function leadingRoute(): ?Route
+    {
+        $leadingRouteId = $this->leadingRouteId();
+
+        if ($leadingRouteId) {
+            $option = $this->routeOptions->firstWhere('route_id', $leadingRouteId);
+            if ($option?->route) {
+                return $option->route;
+            }
+        }
+
+        return $this->route;
+    }
+
     public function currentUserVote(?int $userId): ?RideRouteVote
     {
         if (! $userId) {

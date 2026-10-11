@@ -97,7 +97,7 @@
 
 /* Notification dropdown */
 .notification-dropdown {
-    @apply absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50;
+    @apply absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-[1000];
 }
 
 /* Trim slider */

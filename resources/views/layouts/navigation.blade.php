@@ -1,4 +1,4 @@
-<nav x-data="{ mobileMenuOpen: false }" class="bg-white shadow-sm sticky top-0 z-40" aria-label="Main navigation">
+<nav x-data="{ mobileMenuOpen: false }" class="bg-white shadow-sm sticky top-0 z-[1000]" aria-label="Main navigation">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <!-- Logo -->
@@ -85,7 +85,7 @@
                             </svg>
                         </button>
 
-                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                        <div x-show="open" x-cloak x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-[1000]">
                             <a href="{{ route('profile.edit') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">Profile</a>
                             <a href="{{ route('routes.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Routes</a>
                             <a href="{{ route('rides.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 block">My Rides</a>

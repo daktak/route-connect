@@ -1037,10 +1037,10 @@ Alpine.data('singleRouteMap', (config = {}) => ({
     },
 }));
 
-Alpine.data('meetingPointPicker', () => ({
-    name: '',
-    lat: null,
-    lng: null,
+Alpine.data('meetingPointPicker', (config = {}) => ({
+    name: config.name ?? '',
+    lat: config.lat ?? null,
+    lng: config.lng ?? null,
     searching: false,
     resolvingName: false,
     map: null,
@@ -1062,7 +1062,7 @@ Alpine.data('meetingPointPicker', () => ({
         this.map.on('click', (e) => this.setLocation(e.latlng.lat, e.latlng.lng));
 
         if (this.lat && this.lng) {
-            this.setLocation(this.lat, this.lng, false);
+            this.setLocation(this.lat, this.lng);
         }
 
         window.addEventListener('meeting-point-default', (e) => {

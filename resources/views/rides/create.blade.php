@@ -68,7 +68,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Meeting Point</label>
-                        <div x-data="meetingPointPicker" class="space-y-3">
+                        <div x-data="meetingPointPicker({ lat: {{ isset($route) ? ($route->start_lat ?? 'null') : 'null' }}, lng: {{ isset($route) ? ($route->start_lng ?? 'null') : 'null' }} })" class="space-y-3">
                             <div class="flex gap-2">
                                 <input type="text" name="meeting_point_name" x-model="name" placeholder="Search or enter meeting point name..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <button type="button" @click="search()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" :disabled="searching">

@@ -1264,7 +1264,7 @@ Alpine.data('gpxUpload', () => ({
     },
 
     calcEstTime(distanceKm, gainM) {
-        return Math.round((distanceKm / 20 + gainM / 600) * 60);
+        return Math.round((distanceKm / 23 + gainM / 1200) * 60);
     },
 
     calcDifficulty(distanceKm, gainM) {

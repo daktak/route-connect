@@ -227,10 +227,10 @@ class GpxParser
 
     private function estimateTime(float $distanceKm, int $elevationGainM): int
     {
-        // Base speed: 20 km/h on flat
-        // Add 1 minute per 10m elevation gain (Naismith's rule approximation)
-        $baseTimeHours = $distanceKm / 20;
-        $elevationTimeHours = $elevationGainM / 600; // 10m/min = 600m/h
+        // Base speed: 23 km/h on flat
+        // Add 1 minute per 20m elevation gain (Naismith's rule approximation)
+        $baseTimeHours = $distanceKm / 23;
+        $elevationTimeHours = $elevationGainM / 1200; // 20m/min = 1200m/h
         $totalHours = $baseTimeHours + $elevationTimeHours;
 
         return (int) round($totalHours * 60);

@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('email_notifications')->default(true)->after('emergency_contact_phone');
-            $table->string('telegram_chat_id')->nullable()->after('email_notifications');
+            if (! Schema::hasColumn('users', 'email_notifications')) {
+                $table->boolean('email_notifications')->default(true)->after('emergency_contact_phone');
+            }
+
+            if (! Schema::hasColumn('users', 'telegram_chat_id')) {
+                $table->string('telegram_chat_id')->nullable()->after('email_notifications');
+            }
         });
     }
 
@@ -23,7 +28,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['email_notifications', 'telegram_chat_id']);
+            if (Schema::hasColumn('users', 'email_notifications')) {
+                $table->dropColumn('email_notifications');
+            }
+
+            if (Schema::hasColumn('users', 'telegram_chat_id')) {
+                $table->dropColumn('telegram_chat_id');
+            }
         });
     }
 };

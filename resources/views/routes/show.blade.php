@@ -46,6 +46,50 @@
                     </div>
                 @endif
 
+                <!-- Route Surface -->
+                @if($route->hasSurfaceData())
+                    @php
+                        $surface = $route->surface_breakdown;
+                        $pavedPct = (float) ($surface['paved'] ?? 0);
+                        $gravelPct = (float) ($surface['gravel'] ?? 0);
+                        $unknownPct = (float) ($surface['unknown'] ?? 0);
+                    @endphp
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Surface</h3>
+                        <div class="flex h-4 rounded-full overflow-hidden bg-gray-100">
+                            @if($pavedPct > 0)
+                                <div class="bg-emerald-500" style="width: {{ $pavedPct }}%"></div>
+                            @endif
+                            @if($gravelPct > 0)
+                                <div class="bg-amber-500" style="width: {{ $gravelPct }}%"></div>
+                            @endif
+                            @if($unknownPct > 0)
+                                <div class="bg-gray-300" style="width: {{ $unknownPct }}%"></div>
+                            @endif
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                            <span class="inline-flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="text-gray-600">Paved</span>
+                                <span class="font-semibold text-gray-900">{{ number_format($pavedPct, 1) }}%</span>
+                            </span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                <span class="text-gray-600">Gravel (unpaved)</span>
+                                <span class="font-semibold text-gray-900">{{ number_format($gravelPct, 1) }}%</span>
+                            </span>
+                            @if($unknownPct > 0)
+                                <span class="inline-flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-gray-300"></span>
+                                    <span class="text-gray-600">Unknown</span>
+                                    <span class="font-semibold text-gray-900">{{ number_format($unknownPct, 1) }}%</span>
+                                </span>
+                            @endif
+                        </div>
+                        <p class="mt-3 text-xs text-gray-400">Estimated from OpenStreetMap surface data. All unpaved surfaces are grouped as gravel.</p>
+                    </div>
+                @endif
+
                 <!-- Description -->
                 @if($route->description)
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">

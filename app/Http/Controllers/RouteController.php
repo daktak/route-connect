@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Route;
 use App\Services\GpxGenerator;
 use App\Services\GpxParser;
+use App\Services\SurfaceAnalyzer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -210,6 +211,12 @@ class RouteController extends Controller
 
             return $route;
         });
+
+        try {
+            app(SurfaceAnalyzer::class)->updateRoute($route);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()->route('routes.show', $route)
             ->with('success', 'Route created successfully!');

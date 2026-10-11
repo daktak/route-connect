@@ -28,9 +28,12 @@ class Route extends Model
 
     protected $casts = [
         'gpx_data' => 'array',
+        'surface_breakdown' => 'array',
         'distance_km' => 'decimal:2',
         'elevation_gain_m' => 'integer',
         'estimated_time_min' => 'integer',
+        'gravel_pct' => 'decimal:2',
+        'surface_analyzed_at' => 'datetime',
         'is_public' => 'boolean',
     ];
 
@@ -70,6 +73,11 @@ class Route extends Model
     public function avgRatingModel(): HasOne
     {
         return $this->hasOne(RouteAvgRating::class, 'route_id');
+    }
+
+    public function hasSurfaceData(): bool
+    {
+        return ! empty($this->surface_breakdown);
     }
 
     public function scopePublic($query)

@@ -41,4 +41,9 @@ return [
         'forecast_days' => (int) env('WEATHER_FORECAST_DAYS', 16),
     ],
 
+    'valhalla' => [
+        'base_url' => env('VALHALLA_BASE_URL', 'https://valhalla1.openstreetmap.de'),
+        'timeout' => (int) env('VALHALLA_TIMEOUT', 30),
+    ],
+
 ];

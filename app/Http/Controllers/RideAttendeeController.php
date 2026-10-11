@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GroupRide;
 use App\Models\RideAttendee;
+use App\Models\RideRouteVote;
 use App\Notifications\RideJoined;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,14 @@ class RideAttendeeController extends Controller
             $nextStatus = $statuses[($currentIndex + 1) % count($statuses)];
 
             $existing->update(['status' => $nextStatus]);
+
+            // A vote only stands while the attendee is confirmed.
+            if ($nextStatus !== 'confirmed') {
+                RideRouteVote::where('group_ride_id', $ride->id)
+                    ->where('user_id', Auth::id())
+                    ->where('ride_version', $ride->version)
+                    ->delete();
+            }
 
             return response()->json([
                 'success' => true,
@@ -78,6 +87,11 @@ class RideAttendeeController extends Controller
         }
 
         $attendee->delete();
+
+        RideRouteVote::where('group_ride_id', $ride->id)
+            ->where('user_id', Auth::id())
+            ->where('ride_version', $ride->version)
+            ->delete();
 
         return response()->json(['success' => true]);
     }

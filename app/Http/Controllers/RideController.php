@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GroupRide;
+use App\Models\GroupRideRouteOption;
 use App\Models\RideAttendee;
 use App\Models\Route;
 use App\Notifications\RideCancelled;
@@ -28,7 +29,7 @@ class RideController extends Controller
                 ->selectRaw('ST_Y(ST_StartPoint(geometry)) as start_lat, ST_X(ST_StartPoint(geometry)) as start_lng'),
             'organizer',
             'attendees.user',
-        ])->withCount('attendees');
+        ])->withCount(['attendees', 'routeOptions']);
 
         if ($status === 'upcoming') {
             $query->upcoming();
@@ -70,16 +71,6 @@ class RideController extends Controller
     {
         $preselectedRouteId = $request->query('route');
 
-        if ($preselectedRouteId) {
-            $route = Route::public()->findOrFail($preselectedRouteId);
-            $coordinates = $route->geometry['coordinates'] ?? [];
-            $start = $coordinates[0] ?? null;
-            $route->start_lat = $start[1] ?? null;
-            $route->start_lng = $start[0] ?? null;
-
-            return view('rides.create', compact('route'));
-        }
-
         $routes = Route::public()
             ->orderBy('name')
             ->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty', 'gpx_data']);
@@ -91,13 +82,19 @@ class RideController extends Controller
             $route->start_lng = $start[0] ?? null;
         });
 
-        return view('rides.create', compact('routes'));
+        $selectedRouteIds = array_map('intval', (array) old(
+            'route_ids',
+            $preselectedRouteId ? [$preselectedRouteId] : []
+        ));
+
+        return view('rides.create', compact('routes', 'selectedRouteIds'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'route_id' => 'required|exists:routes,id',
+            'route_ids' => 'required|array|min:1',
+            'route_ids.*' => 'exists:routes,id',
             'title' => 'nullable|string|max:255',
             'ride_date' => 'required|date|after:now',
             'meeting_point_name' => 'nullable|string|max:255',
@@ -107,8 +104,10 @@ class RideController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $routeIds = array_values(array_unique(array_map('intval', $request->route_ids)));
+
         $ride = GroupRide::create([
-            'route_id' => $request->route_id,
+            'route_id' => $routeIds[0],
             'organizer_id' => Auth::id(),
             'title' => $request->title,
             'ride_date' => $request->ride_date,
@@ -120,6 +119,14 @@ class RideController extends Controller
             'status' => 'planned',
             'version' => 1,
         ]);
+
+        foreach ($routeIds as $index => $routeId) {
+            GroupRideRouteOption::create([
+                'group_ride_id' => $ride->id,
+                'route_id' => $routeId,
+                'sort_order' => $index,
+            ]);
+        }
 
         // Organizer auto-joins
         RideAttendee::create([
@@ -140,6 +147,7 @@ class RideController extends Controller
             'organizer',
             'attendees.user',
             'attendees' => fn ($q) => $q->where('ride_version', $ride->version),
+            'routeOptions.route',
         ]);
 
         $ride->weather = $ride->ride_date->isFuture()
@@ -155,7 +163,11 @@ class RideController extends Controller
 
         $routes = Route::public()->orderBy('name')->get(['id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty']);
 
-        return view('rides.edit', compact('ride', 'routes'));
+        $selectedRouteIds = $ride->routeOptions()->pluck('route_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return view('rides.edit', compact('ride', 'routes', 'selectedRouteIds'));
     }
 
     public function update(Request $request, GroupRide $ride)
@@ -163,7 +175,8 @@ class RideController extends Controller
         $this->authorize('update', $ride);
 
         $request->validate([
-            'route_id' => 'required|exists:routes,id',
+            'route_ids' => 'required|array|min:1',
+            'route_ids.*' => 'exists:routes,id',
             'title' => 'nullable|string|max:255',
             'ride_date' => 'required|date',
             'meeting_point_name' => 'nullable|string|max:255',
@@ -174,7 +187,13 @@ class RideController extends Controller
             'status' => ['required', Rule::in(['planned', 'confirmed', 'cancelled', 'completed'])],
         ]);
 
-        $criticalChanged = $ride->route_id !== $request->route_id
+        $routeIds = array_values(array_unique(array_map('intval', $request->route_ids)));
+
+        $currentRouteIds = $ride->routeOptions()->pluck('route_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $criticalChanged = $routeIds !== $currentRouteIds
             || $ride->ride_date->ne($request->ride_date);
 
         $newVersion = $criticalChanged ? $ride->version + 1 : $ride->version;
@@ -188,9 +207,9 @@ class RideController extends Controller
                 ->get()
             : collect();
 
-        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees) {
+        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees, $routeIds) {
             $ride->update([
-                'route_id' => $request->route_id,
+                'route_id' => $routeIds[0],
                 'title' => $request->title,
                 'ride_date' => $request->ride_date,
                 'meeting_point_name' => $request->meeting_point_name,
@@ -203,6 +222,17 @@ class RideController extends Controller
             ]);
 
             if ($criticalChanged) {
+                // Rebuild the route options for the new version.
+                $ride->routeOptions()->delete();
+
+                foreach ($routeIds as $index => $routeId) {
+                    GroupRideRouteOption::create([
+                        'group_ride_id' => $ride->id,
+                        'route_id' => $routeId,
+                        'sort_order' => $index,
+                    ]);
+                }
+
                 // Keep the organizer confirmed on the new version.
                 $ride->attendees()->updateOrCreate(
                     ['user_id' => $ride->organizer_id, 'ride_version' => $newVersion],

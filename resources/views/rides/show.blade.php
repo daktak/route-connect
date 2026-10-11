@@ -116,6 +116,75 @@
                     </dl>
                 </div>
 
+                @if($ride->hasVoting())
+                    @php
+                        $voteCounts = $ride->voteCounts();
+                        $totalVotes = array_sum($voteCounts);
+                        $leadingRouteId = $ride->leadingRouteId();
+                        $myAttendee = $ride->attendees->firstWhere('user_id', auth()->id());
+                        $canVote = auth()->check() && $myAttendee?->status === 'confirmed';
+                        $myVote = auth()->check() ? $ride->currentUserVote(auth()->id()) : null;
+                        $selectedRouteId = $myVote?->route_id;
+                    @endphp
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100" x-data="rideVote({{ $ride->id }}, {{ Js::from($selectedRouteId ? (int) $selectedRouteId : null) }})">
+                        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Route Voting</h3>
+                                <p class="text-sm text-gray-500 mt-1">{{ $totalVotes }} {{ \Illuminate\Support\Str::plural('vote', $totalVotes) }} cast</p>
+                            </div>
+                            @if($canVote)
+                                <span class="text-sm text-primary font-medium" x-show="vote" x-cloak>Your vote is saved</span>
+                            @elseif(auth()->check())
+                                <span class="text-sm text-gray-500">Only confirmed riders can vote</span>
+                            @else
+                                <a href="{{ route('login') }}" class="text-sm text-primary hover:underline">Log in to vote</a>
+                            @endif
+                        </div>
+
+                        <div class="divide-y divide-gray-100">
+                            @foreach($ride->routeOptions as $option)
+                                @php
+                                    $count = $voteCounts[$option->route_id] ?? 0;
+                                    $pct = $totalVotes > 0 ? round(($count / $totalVotes) * 100) : 0;
+                                    $isLeading = $leadingRouteId === $option->route_id && $totalVotes > 0;
+                                    $route = $option->route;
+                                @endphp
+                                <div class="p-4">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <a href="{{ route('routes.show', $route) }}" class="font-medium text-gray-900 hover:text-primary truncate">{{ $route->name }}</a>
+                                                @if($isLeading)
+                                                    <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">Leading</span>
+                                                @endif
+                                                <span class="difficulty-badge {{ $route->difficulty }}">{{ ucfirst($route->difficulty) }}</span>
+                                            </div>
+                                            <p class="text-sm text-gray-500 mt-1">{{ $route->distance_km }} km • {{ $route->elevation_gain_m }}m</p>
+                                        </div>
+                                        <div class="flex items-center gap-3 flex-shrink-0">
+                                            <div class="text-right">
+                                                <p class="font-semibold text-gray-900">{{ $count }}</p>
+                                                <p class="text-xs text-gray-500">{{ $pct }}%</p>
+                                            </div>
+                                            @if($canVote)
+                                                <button type="button" @click="cast({{ $option->route_id }})" :disabled="loading"
+                                                    :class="vote === {{ $option->route_id }} ? 'bg-primary text-white' : 'border border-primary text-primary hover:bg-primary hover:text-white'"
+                                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                                                    <span x-show="vote === {{ $option->route_id }}" x-cloak>Voted</span>
+                                                    <span x-show="vote !== {{ $option->route_id }}" x-cloak>Vote</span>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary rounded-full transition-all" style="width: {{ $pct }}%"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Attendees -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100">
                     <div class="p-6 border-b border-gray-100 flex items-center justify-between">

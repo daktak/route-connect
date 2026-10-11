@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RideAttendeeController;
 use App\Http\Controllers\RideController;
+use App\Http\Controllers\RideRouteVoteController;
 use App\Http\Controllers\RouteController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,9 @@ Route::delete('/rides/{ride}', [RideController::class, 'destroy'])->name('rides.
 Route::post('/rides/{ride}/join', [RideAttendeeController::class, 'join'])->name('rides.join')->middleware('auth');
 Route::delete('/rides/{ride}/leave', [RideAttendeeController::class, 'leave'])->name('rides.leave')->middleware('auth');
 Route::get('/rides/{ride}/attendee-status', [RideAttendeeController::class, 'status'])->name('rides.attendee.status')->middleware('auth');
+
+// Ride Route Votes
+Route::post('/rides/{ride}/vote', [RideRouteVoteController::class, 'store'])->name('rides.vote')->middleware('auth');
 
 // Admin - User management
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {

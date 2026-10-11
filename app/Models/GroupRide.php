@@ -48,6 +48,16 @@ class GroupRide extends Model
         return $this->hasMany(RideAttendee::class)->with('user');
     }
 
+    public function routeOptions(): HasMany
+    {
+        return $this->hasMany(GroupRideRouteOption::class)->orderBy('sort_order');
+    }
+
+    public function votes(): HasMany
+    {
+        return $this->hasMany(RideRouteVote::class);
+    }
+
     public function confirmedAttendees(): HasMany
     {
         return $this->hasMany(RideAttendee::class)
@@ -70,6 +80,56 @@ class GroupRide extends Model
     public function getIsPastAttribute(): bool
     {
         return $this->ride_date->isPast();
+    }
+
+    public function getRouteOptionsCountAttribute(): int
+    {
+        if (array_key_exists('route_options_count', $this->attributes)) {
+            return (int) $this->attributes['route_options_count'];
+        }
+
+        return $this->routeOptions()->count();
+    }
+
+    public function hasVoting(): bool
+    {
+        $count = array_key_exists('route_options_count', $this->attributes)
+            ? (int) $this->attributes['route_options_count']
+            : $this->routeOptions->count();
+
+        return $count > 1
+            && ! in_array($this->status, ['cancelled', 'completed'], true);
+    }
+
+    public function voteCounts(): array
+    {
+        return $this->votes()
+            ->where('ride_version', $this->version)
+            ->selectRaw('route_id, COUNT(*) as total')
+            ->groupBy('route_id')
+            ->pluck('total', 'route_id')
+            ->toArray();
+    }
+
+    public function leadingRouteId(): ?int
+    {
+        $counts = $this->voteCounts();
+
+        return $this->routeOptions
+            ->sortByDesc(fn ($option) => $counts[$option->route_id] ?? 0)
+            ->first()?->route_id;
+    }
+
+    public function currentUserVote(?int $userId): ?RideRouteVote
+    {
+        if (! $userId) {
+            return null;
+        }
+
+        return $this->votes()
+            ->where('user_id', $userId)
+            ->where('ride_version', $this->version)
+            ->first();
     }
 
     public function scopeUpcoming($query)

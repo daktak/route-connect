@@ -3,7 +3,12 @@
         <div class="flex items-start justify-between gap-4 mb-4">
             <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-gray-900 truncate">{{ $ride->title ?? $ride->route->name }}</h3>
-                <p class="text-sm text-gray-500 mt-1">{{ $ride->route->name }}</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    {{ $ride->route->name }}
+                    @if(($ride->route_options_count ?? 0) > 1)
+                        <span class="text-primary">• {{ $ride->route_options_count }} route options</span>
+                    @endif
+                </p>
             </div>
             <span class="ride-status {{ $ride->status }} flex-shrink-0">{{ ucfirst($ride->status) }}</span>
         </div>

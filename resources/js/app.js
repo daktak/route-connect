@@ -1138,16 +1138,104 @@ Alpine.data('meetingPointPicker', (config = {}) => ({
     },
 }));
 
-Alpine.data('routeSelect', () => ({
-    onRouteChange(e) {
-        const opt = e.target.selectedOptions[0];
-        if (!opt) return;
+Alpine.data('routeMultiSelect', (routes = [], preselected = []) => ({
+    routes,
+    selected: [],
+    search: '',
 
-        const lat = parseFloat(opt.dataset.startLat);
-        const lng = parseFloat(opt.dataset.startLng);
+    init() {
+        const available = new Set(this.routes.map((r) => r.id));
+        this.selected = (preselected || []).filter((id) => available.has(id));
+    },
 
+    get filteredRoutes() {
+        const term = this.search.trim().toLowerCase();
+        if (!term) return this.routes;
+        return this.routes.filter((r) => r.name.toLowerCase().includes(term));
+    },
+
+    routeById(id) {
+        return this.routes.find((r) => r.id === id) || null;
+    },
+
+    isSelected(id) {
+        return this.selected.includes(id);
+    },
+
+    toggle(id) {
+        const index = this.selected.indexOf(id);
+        if (index === -1) {
+            this.selected.push(id);
+        } else {
+            this.selected.splice(index, 1);
+        }
+        this.dispatchMeetingPoint();
+    },
+
+    remove(id) {
+        const index = this.selected.indexOf(id);
+        if (index !== -1) {
+            this.selected.splice(index, 1);
+        }
+        this.dispatchMeetingPoint();
+    },
+
+    move(id, direction) {
+        const index = this.selected.indexOf(id);
+        const target = index + direction;
+        if (index === -1 || target < 0 || target >= this.selected.length) return;
+        this.selected.splice(target, 0, this.selected.splice(index, 1)[0]);
+        this.dispatchMeetingPoint();
+    },
+
+    dispatchMeetingPoint() {
+        const first = this.routeById(this.selected[0]);
+        if (!first) return;
+        const lat = parseFloat(first.start_lat);
+        const lng = parseFloat(first.start_lng);
         if (lat && lng) {
             this.$dispatch('meeting-point-default', { lat, lng });
+        }
+    },
+}));
+
+Alpine.data('rideVote', (rideId = null, myVote = null) => ({
+    rideId,
+    vote: myVote,
+    loading: false,
+
+    async cast(routeId) {
+        if (this.loading) return;
+        this.loading = true;
+
+        try {
+            const response = await fetch(`/rides/${this.rideId}/vote`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                },
+                body: JSON.stringify({ route_id: routeId }),
+            });
+
+            if (response.ok) {
+                this.vote = routeId;
+                window.location.reload();
+            } else {
+                let message = 'Failed to save vote';
+                try {
+                    const error = await response.json();
+                    message = error.message || message;
+                } catch {
+                    message = `Server error: ${response.status} ${response.statusText}`;
+                }
+                alert(message);
+            }
+        } catch (e) {
+            alert('Network error: ' + e.message);
+        } finally {
+            this.loading = false;
         }
     },
 }));

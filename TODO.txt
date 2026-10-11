@@ -6,4 +6,3 @@
 * Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
 * Notification of a route or date change for "this" ride, does not say wihch ride, or link to it
 * Add route type percentages, victoria/melbourne primarily. free/keyless only. all unpaved is "gravel". compute at upload, surface in route detail only
-* Ride creation should allow mulitple route selection, and users who elect "i'm in" can then vote (once) for their prefered route. The user can change their vote at any time they are still in the ride. If they leave the ride, their vote is removed. The current voting results are displayed on the ride details page.

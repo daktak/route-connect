@@ -10,6 +10,10 @@ window.L = L;
 
 const isAuthenticated = () => document.querySelector('meta[name="user-authenticated"]')?.content === '1';
 
+// Prefix internal URLs with the app base path (supports sub-directory deployments)
+const appBaseUrl = (document.querySelector('meta[name="app-base-url"]')?.content || '').replace(/\/+$/, '');
+const appUrl = (path) => `${appBaseUrl}/${String(path).replace(/^\/+/, '')}`;
+
 // Fix Leaflet marker icon paths
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -74,7 +78,7 @@ Alpine.data('routeFilters', () => ({
             features: features.length === this.availableFeatures.length ? [] : features,
         };
 
-        return fetch('/preferences/route-filters', {
+        return fetch(appUrl('/preferences/route-filters'), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -260,7 +264,7 @@ Alpine.data('routeMap', (config = {}) => ({
                     <div class="capitalize">${route.difficulty}</div>
                     ${route.avg_rating ? `<div>⭐ ${route.avg_rating} (${route.rating_count})</div>` : ''}
                 </div>
-                <a href="/routes/${route.id}" class="block mt-2 text-sm text-primary hover:underline">View Details</a>
+                <a href="${appUrl(`/routes/${route.id}`)}" class="block mt-2 text-sm text-primary hover:underline">View Details</a>
             </div>
         `;
     },
@@ -453,7 +457,7 @@ Alpine.data('rideJoin', (rideId = null, userId = null, status = null, rideVersio
         if (!this.rideId || !this.userId) return;
 
         try {
-            const response = await fetch(`/rides/${this.rideId}/attendee-status`, {
+            const response = await fetch(appUrl(`/rides/${this.rideId}/attendee-status`), {
                 credentials: 'same-origin',
             });
             const data = await response.json();
@@ -469,7 +473,7 @@ Alpine.data('rideJoin', (rideId = null, userId = null, status = null, rideVersio
         this.loading = true;
 
         try {
-            const response = await fetch(`/rides/${this.rideId}/join`, {
+            const response = await fetch(appUrl(`/rides/${this.rideId}/join`), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -504,7 +508,7 @@ Alpine.data('rideJoin', (rideId = null, userId = null, status = null, rideVersio
         this.loading = true;
 
         try {
-            const response = await fetch(`/rides/${this.rideId}/leave`, {
+            const response = await fetch(appUrl(`/rides/${this.rideId}/leave`), {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: {
@@ -568,7 +572,7 @@ Alpine.data('notificationBell', () => ({
 
     async fetchNotifications() {
         try {
-            const response = await fetch('/notifications', {
+            const response = await fetch(appUrl('/notifications'), {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' },
             });
@@ -582,7 +586,7 @@ Alpine.data('notificationBell', () => ({
 
     async markAsRead(id) {
         try {
-            await fetch(`/notifications/${id}/read`, {
+            await fetch(appUrl(`/notifications/${id}/read`), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -600,7 +604,7 @@ Alpine.data('notificationBell', () => ({
 
     async markAllAsRead() {
         try {
-            await fetch('/notifications/read-all', {
+            await fetch(appUrl('/notifications/read-all'), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -783,7 +787,7 @@ Alpine.data('commentItem', () => ({
 
         this.saving = true;
         try {
-            const response = await fetch(`/comments/${this.commentId}`, {
+            const response = await fetch(appUrl(`/comments/${this.commentId}`), {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: {
@@ -809,7 +813,7 @@ Alpine.data('commentItem', () => ({
         if (!confirm('Delete this comment?')) return;
 
         try {
-            const response = await fetch(`/comments/${this.commentId}`, {
+            const response = await fetch(appUrl(`/comments/${this.commentId}`), {
                 method: 'DELETE',
                 credentials: 'same-origin',
                 headers: {
@@ -831,7 +835,7 @@ Alpine.data('commentItem', () => ({
 
         this.saving = true;
         try {
-            const response = await fetch(`/routes/${this.routeId}/comments`, {
+            const response = await fetch(appUrl(`/routes/${this.routeId}/comments`), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -1261,7 +1265,7 @@ Alpine.data('rideVote', (rideId = null, myVote = null) => ({
         this.loading = true;
 
         try {
-            const response = await fetch(`/rides/${this.rideId}/vote`, {
+            const response = await fetch(appUrl(`/rides/${this.rideId}/vote`), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -1321,7 +1325,7 @@ Alpine.data('gpxUpload', () => ({
             const formData = new FormData();
             formData.append('gpx_file', file);
 
-            const response = await fetch('/api/routes/parse-gpx', {
+            const response = await fetch(appUrl('/api/routes/parse-gpx'), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -1497,7 +1501,7 @@ Alpine.store('viewMode', {
         document.cookie = `routes_view_mode=${mode};path=/;max-age=31536000;SameSite=Lax`;
 
         if (isAuthenticated()) {
-            fetch('/preferences/route-view-mode', {
+            fetch(appUrl('/preferences/route-view-mode'), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

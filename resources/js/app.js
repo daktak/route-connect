@@ -1071,6 +1071,7 @@ Alpine.data('meetingPointPicker', (config = {}) => ({
     lng: config.lng ?? null,
     searching: false,
     resolvingName: false,
+    timezone: '',
     map: null,
     markerLayer: null,
 
@@ -1109,6 +1110,29 @@ Alpine.data('meetingPointPicker', (config = {}) => ({
             this.map.setView([lat, lng], 15);
         }
         this.resolveName();
+        this.resolveTimezone();
+    },
+
+    async resolveTimezone() {
+        if (!this.lat || !this.lng) {
+            this.timezone = '';
+            return;
+        }
+
+        const lat = this.lat;
+        const lng = this.lng;
+
+        try {
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&current=temperature_2m&timezone=auto&forecast_days=1`);
+            const data = await response.json();
+
+            if (this.lat !== lat || this.lng !== lng) return;
+
+            this.timezone = data?.timezone || '';
+        } catch (e) {
+            console.error('Timezone lookup failed', e);
+            this.timezone = '';
+        }
     },
 
     async resolveName() {

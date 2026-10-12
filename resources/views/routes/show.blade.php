@@ -258,7 +258,7 @@
                                         <span class="font-medium text-gray-900">{{ $ride->title ?? 'Group Ride' }}</span>
                                         <span class="ride-status {{ $ride->status }}">{{ ucfirst($ride->status) }}</span>
                                     </div>
-                                    <div class="text-sm text-gray-600">{{ $ride->ride_date->format('l, M j, Y \a\t g:i A') }}</div>
+                                    <div class="text-sm text-gray-600">{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, M j, Y \a\t g:i A') }}</div>
                                     @if($ride->meeting_point_name)
                                         <div class="text-sm text-gray-500 mt-1">{{ $ride->meeting_point_name }}</div>
                                     @endif

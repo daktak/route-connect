@@ -9,7 +9,7 @@ trait HandlesOpenMeteoData
     /**
      * @return array{lat: float, lng: float}|null
      */
-    private function resolveCoordinates(GroupRide $ride): ?array
+    public function resolveCoordinates(GroupRide $ride): ?array
     {
         if ($ride->meeting_point_lat && $ride->meeting_point_lng) {
             return [

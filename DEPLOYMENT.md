@@ -46,7 +46,8 @@ APP_ENV=production
 APP_KEY=            # php artisan key:generate
 APP_DEBUG=false
 APP_URL=https://example.com          # include the sub-path, see section 9
-APP_TIMEZONE=Australia/Melbourne     # keep in sync across web + cron
+APP_TIMEZONE=UTC                     # DB clock; ride times are stored as UTC instants
+APP_DEFAULT_TIMEZONE=Australia/Melbourne  # fallback ride timezone (legacy rides, unresolved coords)
 
 ADMIN_EMAILS=you@example.com
 
@@ -138,12 +139,16 @@ or config. To clear: `php artisan optimize:clear`.
 
 The scheduled commands live in `routes/console.php` and require cron:
 
-- `rides:send-reminders` — daily at 08:00; notifies confirmed attendees about rides starting soon.
-- `rides:mark-past-completed` — daily at 00:05; marks past planned/confirmed rides as completed.
+- `rides:send-reminders` — daily at 08:00 (in `APP_DEFAULT_TIMEZONE`); notifies confirmed attendees about rides starting soon.
+- `rides:mark-past-completed` — daily at 00:05 (in `APP_DEFAULT_TIMEZONE`); marks past planned/confirmed rides as completed.
 
 ```cron
 * * * * * cd /var/www/route-connect && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+`rides:derive-timezones` is **not** scheduled; run it manually once after
+deploying the timezone support to backfill `group_rides.timezone` from each
+ride's coordinates (`--dry-run` first). It calls the external Open-Meteo API.
 
 `routes:analyze-surface` is **not** scheduled. If you want surface percentages
 computed server-side, schedule it yourself (it calls the external Valhalla API,

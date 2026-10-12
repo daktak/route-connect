@@ -2,10 +2,11 @@
     $variant = $variant ?? 'compact';
     $location = $location ?? null;
     $airQuality = $airQuality ?? null;
+    $tz = $tz ?? config('app.default_timezone');
     $temp = $weather['temperature'] !== null ? round($weather['temperature']) . '°' : '—';
     $rain = $weather['precip_probability'] !== null ? round($weather['precip_probability']) . '%' : '—';
     $wind = $weather['wind_speed'] !== null ? round($weather['wind_speed']) . ' km/h' : '—';
-    $forecastTime = $weather['time']->setTimezone(config('app.timezone'))->format('M j, g:i A');
+    $forecastTime = $weather['time']->timezone($tz)->format('M j, g:i A');
     $uv = $weather['uv_index'] ?? null;
     $uvLevel = $weather['uv_level'] ?? null;
     $uvClass = match ($uvLevel) {

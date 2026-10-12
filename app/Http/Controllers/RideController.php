@@ -9,8 +9,10 @@ use App\Models\Route;
 use App\Notifications\RideCancelled;
 use App\Notifications\RideChanged;
 use App\Services\AirQualityService;
+use App\Services\TimezoneService;
 use App\Services\WeatherService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -26,7 +28,7 @@ class RideController extends Controller
 
         $query = GroupRide::with([
             'route' => fn ($q) => $q
-                ->select('id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty')
+                ->select('id', 'name', 'distance_km', 'elevation_gain_m', 'difficulty', 'estimated_time_min')
                 ->selectRaw('ST_Y(ST_StartPoint(geometry)) as start_lat, ST_X(ST_StartPoint(geometry)) as start_lng'),
             'organizer',
             'attendees.user',
@@ -41,10 +43,12 @@ class RideController extends Controller
         }
 
         if ($request->filled('from')) {
-            $query->whereDate('ride_date', '>=', $request->date('from'));
+            $from = Carbon::parse($request->from, config('app.default_timezone'))->startOfDay()->utc();
+            $query->where('ride_date', '>=', $from);
         }
         if ($request->filled('to')) {
-            $query->whereDate('ride_date', '<=', $request->date('to'));
+            $to = Carbon::parse($request->to, config('app.default_timezone'))->endOfDay()->utc();
+            $query->where('ride_date', '<=', $to);
         }
 
         $rides = $query->paginate(15)->withQueryString();
@@ -113,11 +117,14 @@ class RideController extends Controller
 
         $routeIds = array_values(array_unique(array_map('intval', $request->route_ids)));
 
+        $rideDateTime = $this->rideDateTime($request, $routeIds);
+
         $ride = GroupRide::create([
             'route_id' => $routeIds[0],
             'organizer_id' => Auth::id(),
             'title' => $request->title,
-            'ride_date' => $request->ride_date,
+            'ride_date' => $rideDateTime['ride_date'],
+            'timezone' => $rideDateTime['timezone'],
             'meeting_point_name' => $request->meeting_point_name,
             'meeting_point_lat' => $request->meeting_point_lat,
             'meeting_point_lng' => $request->meeting_point_lng,
@@ -200,12 +207,15 @@ class RideController extends Controller
 
         $routeIds = array_values(array_unique(array_map('intval', $request->route_ids)));
 
+        $rideDateTime = $this->rideDateTime($request, $routeIds);
+        $rideDate = $rideDateTime['ride_date'];
+
         $currentRouteIds = $ride->routeOptions()->pluck('route_id')
             ->map(fn ($id) => (int) $id)
             ->all();
 
         $criticalChanged = $routeIds !== $currentRouteIds
-            || $ride->ride_date->ne($request->ride_date);
+            || $ride->ride_date->ne($rideDate);
 
         $newVersion = $criticalChanged ? $ride->version + 1 : $ride->version;
 
@@ -218,11 +228,14 @@ class RideController extends Controller
                 ->get()
             : collect();
 
-        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees, $routeIds) {
+        $rideTimezone = $rideDateTime['timezone'];
+
+        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees, $routeIds, $rideDate, $rideTimezone) {
             $ride->update([
                 'route_id' => $routeIds[0],
                 'title' => $request->title,
-                'ride_date' => $request->ride_date,
+                'ride_date' => $rideDate,
+                'timezone' => $rideTimezone,
                 'meeting_point_name' => $request->meeting_point_name,
                 'meeting_point_lat' => $request->meeting_point_lat,
                 'meeting_point_lng' => $request->meeting_point_lng,
@@ -276,7 +289,7 @@ class RideController extends Controller
             ->get();
 
         $message = 'The ride "'.($ride->title ?: $ride->route?->name).'" on '
-            .$ride->ride_date->format('l, M j, Y').' has been cancelled.';
+            .$ride->ride_date->timezone($ride->timezoneName())->format('l, M j, Y').' has been cancelled.';
 
         foreach ($attendees as $attendee) {
             $attendee->user?->notify(new RideCancelled($ride, $message));
@@ -286,5 +299,36 @@ class RideController extends Controller
 
         return redirect()->route('rides.index')
             ->with('success', 'Ride cancelled!');
+    }
+
+    /**
+     * Interpret the submitted datetime-local value in the ride's location
+     * timezone (meeting point, else the primary route's start point) and
+     * return the UTC instant plus the resolved timezone.
+     *
+     * @return array{timezone: string, ride_date: Carbon}
+     */
+    private function rideDateTime(Request $request, array $routeIds): array
+    {
+        $lat = $request->filled('meeting_point_lat') ? (float) $request->meeting_point_lat : null;
+        $lng = $request->filled('meeting_point_lng') ? (float) $request->meeting_point_lng : null;
+
+        if (! $lat || ! $lng) {
+            $route = Route::find($routeIds[0] ?? null);
+            $coordinates = $route?->geometry['coordinates'] ?? [];
+            $start = $coordinates[0] ?? null;
+            $lat = $start[1] ?? null;
+            $lng = $start[0] ?? null;
+        }
+
+        $tz = ($lat && $lng)
+            ? app(TimezoneService::class)->forCoordinates($lat, $lng)
+            : null;
+        $tz = $tz ?: config('app.default_timezone');
+
+        return [
+            'timezone' => $tz,
+            'ride_date' => Carbon::parse($request->ride_date, $tz)->utc(),
+        ];
     }
 }

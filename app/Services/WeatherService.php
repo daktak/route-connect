@@ -192,7 +192,7 @@ class WeatherService
         $sunset = null;
         $dailyTimes = $daily['time'] ?? [];
         if (! empty($dailyTimes)) {
-            $rideTimestamp = $ride->ride_date->startOfDay()->getTimestamp();
+            $rideTimestamp = $ride->ride_date->copy()->timezone($ride->timezoneName())->startOfDay()->getTimestamp();
             $dayIndex = $this->closestIndex($dailyTimes, $rideTimestamp);
             if ($dayIndex !== null && isset($daily['sunrise'][$dayIndex], $daily['sunset'][$dayIndex])) {
                 $sunrise = Carbon::createFromTimestamp((int) $daily['sunrise'][$dayIndex], 'UTC');

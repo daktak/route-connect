@@ -4,7 +4,7 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">{{ $ride->title ?? $ride->route->name }}</h1>
                 <p class="text-gray-600 mt-1">
-                    {{ $ride->ride_date->format('l, F j, Y \a\t g:i A') }}
+                    {{ $ride->ride_date->timezone($ride->timezoneName())->format('l, F j, Y \a\t g:i A') }}
                     @if($ride->meeting_point_name)
                         • {{ $ride->meeting_point_name }}
                     @endif
@@ -46,7 +46,7 @@
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <dt class="text-sm text-gray-500">Date & Time</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->ride_date->format('l, F j, Y \a\t g:i A') }}</dd>
+                            <dd class="font-medium text-gray-900">{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, F j, Y \a\t g:i A') }} <span class="text-gray-400" title="Ride timezone">{{ $ride->timezoneName() }}</span></dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Meeting Point</dt>
@@ -96,8 +96,9 @@
                         </div>
                         @if($ride->weather && ($ride->weather['sunrise'] ?? null) && ($ride->weather['sunset'] ?? null))
                             @php
-                                $sunrise = \Carbon\Carbon::parse($ride->weather['sunrise'])->setTimezone(config('app.timezone'));
-                                $sunset = \Carbon\Carbon::parse($ride->weather['sunset'])->setTimezone(config('app.timezone'));
+                                $tz = $ride->timezoneName();
+                                $sunrise = \Carbon\Carbon::parse($ride->weather['sunrise'])->timezone($tz);
+                                $sunset = \Carbon\Carbon::parse($ride->weather['sunset'])->timezone($tz);
                                 $rideTime = $ride->ride_date;
                                 $duration = $ride->route->estimated_time_min ?? 0;
                                 $rideEnd = $rideTime->copy()->addMinutes($duration);
@@ -286,6 +287,7 @@
                         'airQuality' => $ride->airQuality,
                         'location' => $ride->meeting_point_name ?: $ride->route->name . ' start',
                         'variant' => 'detail',
+                        'tz' => $ride->timezoneName(),
                     ])
                 @endif
 

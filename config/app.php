@@ -92,6 +92,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Site-side default used when a group ride has no timezone of its own
+    | (e.g. coordinates could not be resolved or the timezone lookup failed).
+    | Ride date/times are stored as UTC instants and rendered in each ride's
+    | derived timezone; this value is the fallback for guests and legacy rows.
+    |
+    */
+
+    'default_timezone' => env('APP_DEFAULT_TIMEZONE', 'Australia/Melbourne'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

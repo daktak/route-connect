@@ -16,11 +16,11 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span>{{ $ride->ride_date->format('l, M j, Y') }}</span>
+                <span>{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, M j, Y') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>{{ $ride->ride_date->format('g:i A') }}</span>
+                <span>{{ $ride->ride_date->timezone($ride->timezoneName())->format('g:i A') }}</span>
             </div>
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
@@ -41,8 +41,9 @@
 
         @if($ride->weather && ($ride->weather['sunrise'] ?? null) && ($ride->weather['sunset'] ?? null))
             @php
-                $sunrise = \Carbon\Carbon::parse($ride->weather['sunrise'])->setTimezone(config('app.timezone'));
-                $sunset = \Carbon\Carbon::parse($ride->weather['sunset'])->setTimezone(config('app.timezone'));
+                $tz = $ride->timezoneName();
+                $sunrise = \Carbon\Carbon::parse($ride->weather['sunrise'])->timezone($tz);
+                $sunset = \Carbon\Carbon::parse($ride->weather['sunset'])->timezone($tz);
                 $rideTime = $ride->ride_date;
                 $duration = $ride->route->estimated_time_min ?? 0;
                 $rideEnd = $rideTime->copy()->addMinutes($duration);
@@ -77,6 +78,7 @@
                 'weather' => $ride->weather,
                 'airQuality' => $ride->airQuality,
                 'location' => $ride->meeting_point_name ?: $ride->route->name . ' start',
+                'tz' => $ride->timezoneName(),
             ])
         @endif
 

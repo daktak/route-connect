@@ -193,8 +193,8 @@ to keep.
 
 Two commands are scheduled (`routes/console.php`):
 
-- `rides:send-reminders` — daily at 08:00; notifies confirmed attendees about rides starting soon.
-- `rides:mark-past-completed` — daily at 00:05; marks past planned/confirmed rides as completed.
+- `rides:send-reminders` — daily at 08:00 (ride site timezone); notifies confirmed attendees about rides starting soon.
+- `rides:mark-past-completed` — daily at 00:05 (ride site timezone); marks past planned/confirmed rides as completed.
 
 `routes:analyze-surface` is **not** scheduled; run it manually (e.g. `php artisan
 routes:analyze-surface --missing`) or wire it into your own schedule. It calls the
@@ -286,7 +286,8 @@ controller — **not** database columns.
 |----------|-------------|---------|
 | `APP_ENV` | Environment | `local` |
 | `APP_URL` | Base URL (include sub-path if hosted under one) | `http://localhost:8000` |
-| `APP_TIMEZONE` | Application timezone | `.env.example`: `Australia/Melbourne`; config default `UTC` |
+| `APP_TIMEZONE` | DB clock / application timezone (UTC) | `.env.example`: `UTC` |
+| `APP_DEFAULT_TIMEZONE` | Fallback ride timezone (legacy rides, unresolved coords) | `Australia/Melbourne` |
 | `ASSET_URL` / `APP_FORCE_ROOT_URL` | Sub-path hosting for `asset()`/`@vite` | empty / `false` |
 | `ADMIN_EMAILS` | Comma-separated admin emails | empty |
 | `DB_CONNECTION` | Database driver | `pgsql` |

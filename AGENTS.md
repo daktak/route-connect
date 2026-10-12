@@ -16,7 +16,7 @@ Laravel web app for cyclists to share GPX routes, discover rides, and coordinate
 - Composer: not on `PATH` by default — invoke as `~/.local/bin/composer` or add it: `export PATH=$PATH:$HOME/bin`.
 - Node v18 (Vite is pinned to `^5.4.0`; do not upgrade to a Vite that requires newer Node).
 - PostgreSQL + PostGIS. Default DB `routes`, user `routes_app`. Create the PostGIS extension as a superuser first if needed.
-- `ADMIN_EMAILS` (comma-separated) grants admin; `APP_TIMEZONE` drives all timestamps (config default `UTC`; `.env.example` sets `Australia/Melbourne`).
+- `ADMIN_EMAILS` (comma-separated) grants admin; `APP_TIMEZONE` is the DB clock (UTC). Ride times are stored as UTC `timestamptz` and rendered in each ride's location-derived timezone; `APP_DEFAULT_TIMEZONE` (config default `Australia/Melbourne`) is the fallback. See `TimezoneService`.
 - Setup: copy `.env.example` to `.env`, set the `pgsql` credentials, then:
 
   ```sh
@@ -38,8 +38,10 @@ Laravel web app for cyclists to share GPX routes, discover rides, and coordinate
 | Tests        | `php artisan test`      |
 
 Scheduled commands (`routes/console.php`): `rides:send-reminders` (08:00),
-`rides:mark-past-completed` (00:05). `routes:analyze-surface` is **not**
-scheduled and calls the external Valhalla API.
+`rides:mark-past-completed` (00:05), both fired in `APP_DEFAULT_TIMEZONE`.
+`routes:analyze-surface` is **not** scheduled and calls the external Valhalla API.
+`rides:derive-timezones` backfills the `group_rides.timezone` column via
+Open-Meteo and is run manually.
 
 `php artisan test` currently requires the `pdo_sqlite` extension (`php8.3-sqlite3`), which is not installed in this environment. Build a real DB connection or install the extension to run tests.
 

@@ -17,6 +17,7 @@ class GroupRide extends Model
         'title',
         'description',
         'ride_date',
+        'timezone',
         'meeting_point_lat',
         'meeting_point_lng',
         'meeting_point_name',
@@ -75,6 +76,15 @@ class GroupRide extends Model
     public function getIsFullAttribute(): bool
     {
         return $this->max_participants && $this->attendees_count >= $this->max_participants;
+    }
+
+    /**
+     * The canonical timezone for this ride (location-derived), falling back to
+     * the site default when unknown.
+     */
+    public function timezoneName(): string
+    {
+        return $this->timezone ?: config('app.default_timezone');
     }
 
     public function getIsPastAttribute(): bool

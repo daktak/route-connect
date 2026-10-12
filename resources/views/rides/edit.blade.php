@@ -96,7 +96,8 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date & Time *</label>
-                        <input type="datetime-local" name="ride_date" value="{{ old('ride_date', $ride->ride_date->format('Y-m-d\TH:i')) }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <input type="datetime-local" name="ride_date" value="{{ old('ride_date', $ride->ride_date->timezone($ride->timezoneName())->format('Y-m-d\TH:i')) }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <p class="mt-1 text-sm text-gray-500">Times are shown in the ride timezone: {{ $ride->timezoneName() }}</p>
                         @error('ride_date')
                             <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
                         @enderror

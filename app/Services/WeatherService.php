@@ -185,7 +185,7 @@ class WeatherService
 
         $code = (int) ($hourly['weather_code'][$index] ?? 0);
 
-        $uv = $this->round($hourly['uv_index'][$index] ?? null);
+        $uv = $this->peakUvDuringRide($ride, $hourly, $times, $index, $target);
 
         // Extract sunrise/sunset for the ride date from daily data
         $sunrise = null;
@@ -215,6 +215,46 @@ class WeatherService
             'sunrise' => $sunrise,
             'sunset' => $sunset,
         ];
+    }
+
+    /**
+     * The highest UV index expected while the ride is underway, taken across
+     * the hours the ride spans. Falls back to the value at the start hour when
+     * the route has no estimated duration.
+     *
+     * @param  array{uv_index?: array<int, mixed>}  $hourly
+     * @param  array<int, int|string>  $times
+     */
+    private function peakUvDuringRide(GroupRide $ride, array $hourly, array $times, int $index, int $target): ?float
+    {
+        $duration = (int) ($ride->route?->estimated_time_min ?? 0);
+
+        if ($duration <= 0) {
+            return $this->round($hourly['uv_index'][$index] ?? null);
+        }
+
+        $series = $hourly['uv_index'] ?? [];
+        $windowStart = $target - ($target % 3600);
+        $windowEnd = $target + ($duration * 60);
+
+        $peak = null;
+        foreach ($times as $i => $time) {
+            $time = (int) $time;
+            if ($time < $windowStart || $time >= $windowEnd) {
+                continue;
+            }
+
+            $value = $series[$i] ?? null;
+            if ($value === null) {
+                continue;
+            }
+
+            $peak = $peak === null ? (float) $value : max($peak, (float) $value);
+        }
+
+        return $peak === null
+            ? $this->round($hourly['uv_index'][$index] ?? null)
+            : round($peak, 1);
     }
 
     private function cacheKey(float $lat, float $lng): string

@@ -51,6 +51,7 @@ return [
 
     'discord' => [
         'webhook_url' => env('DISCORD_WEBHOOK_URL'),
+        'invite_url' => env('DISCORD_INVITE_URL'),
         'timeout' => (int) env('DISCORD_TIMEOUT', 5),
     ],
 

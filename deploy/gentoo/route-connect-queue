@@ -1,0 +1,47 @@
+#!/sbin/openrc-run
+
+# OpenRC service for the Route Connect Laravel queue worker.
+#
+# Install:
+#   install -m 0755 deploy/gentoo/route-connect-queue /etc/init.d/route-connect-queue
+#   rc-update add route-connect-queue default
+#   rc-service route-connect-queue start
+#
+# Reload after a deploy (graceful):
+#   rc-service route-connect-queue reload
+
+name="Route Connect queue worker"
+description="Laravel queue worker for Route Connect"
+
+directory="/pub/git/route-connect"
+command="/usr/bin/php"
+command_args="${directory}/artisan queue:work --sleep=3 --tries=3 --max-time=3600"
+command_user="apache:apache"
+
+# supervise-daemon keeps the worker alive and restarts it if it crashes.
+supervisor="supervise-daemon"
+respawn_delay=5
+respawn_max=0
+
+output_log="/var/log/route-connect-queue.log"
+error_log="/var/log/route-connect-queue.log"
+
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+    need localmount
+    after net postgresql
+    use logger
+}
+
+start_pre() {
+    checkpath --file --owner "${command_user}" --mode 0640 "${output_log}" 2>/dev/null
+    checkpath --file --owner "${command_user}" --mode 0640 "${error_log}" 2>/dev/null
+}
+
+reload() {
+    ebegin "Signalling queue workers to restart"
+    su -s /bin/sh "${command_user%%:*}" \
+        -c "cd '${directory}' && /usr/bin/php artisan queue:restart" >/dev/null 2>&1
+    eend $?
+}

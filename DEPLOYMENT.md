@@ -206,6 +206,21 @@ If email/Telegram delivery is implemented later, configure `MAIL_*` / those chan
 then; the `email_notifications` / `telegram_chat_id` profile preferences are stored but
 delivery is still **not implemented**.
 
+### Gentoo / OpenRC
+
+On Gentoo (OpenRC) use the bundled service instead of Supervisor:
+
+```sh
+install -m 0755 deploy/gentoo/route-connect-queue /etc/init.d/route-connect-queue
+rc-update add route-connect-queue default
+rc-service route-connect-queue start
+```
+
+It runs as `apache:apache` from `/pub/git/route-connect` under `supervise-daemon`
+(auto-restart) and logs to `/var/log/route-connect-queue.log`. After a deploy,
+`rc-service route-connect-queue reload` runs `queue:restart` gracefully. Edit the
+`directory`/`command_user`/log paths at the top of the script to match your install.
+
 ## 8. Web server
 
 ### Option A — dedicated server block (simplest)

@@ -86,6 +86,9 @@ VALHALLA_BASE_URL=https://valhalla1.openstreetmap.de
 # Discord notifications (webhook URL of the target channel; empty disables)
 DISCORD_WEBHOOK_URL=
 DISCORD_TIMEOUT=5
+
+# Hours before a ride starts that confirmed attendees are reminded
+RIDE_REMINDER_HOURS=24
 ```
 
 Then:
@@ -143,8 +146,10 @@ or config. To clear: `php artisan optimize:clear`.
 
 The scheduled commands live in `routes/console.php` and require cron:
 
-- `rides:send-reminders` — daily at 08:00 (in `APP_DEFAULT_TIMEZONE`); notifies confirmed attendees about rides starting soon.
-- `rides:mark-past-completed` — daily at 00:05 (in `APP_DEFAULT_TIMEZONE`); marks past planned/confirmed rides as completed.
+- `rides:send-reminders` — hourly; reminds confirmed attendees once per ride when it falls within `RIDE_REMINDER_HOURS` (default 24, `.env`) of its start time. Sent-once is tracked by `group_rides.reminder_sent_at`.
+- `rides:mark-past-completed` — hourly; marks past planned/confirmed rides as completed.
+
+Both run `->withoutOverlapping()`; the scheduler process (also required for the queue) handles them.
 
 ```cron
 * * * * * cd /var/www/route-connect && php artisan schedule:run >> /dev/null 2>&1

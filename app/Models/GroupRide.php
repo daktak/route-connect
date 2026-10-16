@@ -32,6 +32,7 @@ class GroupRide extends Model
         'meeting_point_lng' => 'decimal:8',
         'max_participants' => 'integer',
         'version' => 'integer',
+        'reminder_sent_at' => 'datetime',
     ];
 
     public function route(): BelongsTo

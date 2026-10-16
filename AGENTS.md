@@ -37,8 +37,10 @@ Laravel web app for cyclists to share GPX routes, discover rides, and coordinate
 | Format       | `./vendor/bin/pint`     |
 | Tests        | `php artisan test`      |
 
-Scheduled commands (`routes/console.php`): `rides:send-reminders` (08:00),
-`rides:mark-past-completed` (00:05), both fired in `APP_DEFAULT_TIMEZONE`.
+Scheduled commands (`routes/console.php`): `rides:send-reminders` and
+`rides:mark-past-completed`, both hourly. Reminders fire once per ride when it
+falls within `RIDE_REMINDER_HOURS` (default 24, `config/rides.php`) of its start
+time, tracked by `group_rides.reminder_sent_at`.
 `routes:analyze-surface` is **not** scheduled and calls the external Valhalla API.
 `rides:derive-timezones` backfills the `group_rides.timezone` column via
 Open-Meteo and is run manually.

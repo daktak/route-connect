@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RideCancelled;
+use App\Events\RideChanged;
+use App\Events\RideCreated;
 use App\Models\GroupRide;
 use App\Models\GroupRideRouteOption;
 use App\Models\RideAttendee;
 use App\Models\Route;
-use App\Notifications\RideCancelled;
-use App\Notifications\RideChanged;
 use App\Services\AirQualityService;
 use App\Services\TimezoneService;
 use App\Services\WeatherService;
@@ -150,6 +151,8 @@ class RideController extends Controller
             'status' => 'confirmed',
         ]);
 
+        event(new RideCreated($ride, Auth::user()));
+
         return redirect()->route('rides.show', $ride)
             ->with('success', 'Group ride created! You are automatically attending.');
     }
@@ -230,7 +233,7 @@ class RideController extends Controller
 
         $rideTimezone = $rideDateTime['timezone'];
 
-        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $removedAttendees, $routeIds, $rideDate, $rideTimezone) {
+        DB::transaction(function () use ($request, $ride, $criticalChanged, $newVersion, $routeIds, $rideDate, $rideTimezone) {
             $ride->update([
                 'route_id' => $routeIds[0],
                 'title' => $request->title,
@@ -262,15 +265,17 @@ class RideController extends Controller
                     ['user_id' => $ride->organizer_id, 'ride_version' => $newVersion],
                     ['status' => 'confirmed']
                 );
-
-                foreach ($removedAttendees as $attendee) {
-                    $attendee->user?->notify(new RideChanged(
-                        $ride,
-                        'The route or date for this ride changed. Please confirm your attendance again.'
-                    ));
-                }
             }
         });
+
+        if ($criticalChanged) {
+            event(new RideChanged(
+                $ride,
+                'The route or date for this ride changed. Please confirm your attendance again.',
+                $removedAttendees,
+                Auth::user(),
+            ));
+        }
 
         return redirect()->route('rides.show', $ride)
             ->with('success', 'Ride updated successfully!');
@@ -291,9 +296,7 @@ class RideController extends Controller
         $message = 'The ride "'.($ride->title ?: $ride->route?->name).'" on '
             .$ride->ride_date->timezone($ride->timezoneName())->format('l, M j, Y').' has been cancelled.';
 
-        foreach ($attendees as $attendee) {
-            $attendee->user?->notify(new RideCancelled($ride, $message));
-        }
+        event(new RideCancelled($ride, $message, $attendees));
 
         $ride->delete();
 

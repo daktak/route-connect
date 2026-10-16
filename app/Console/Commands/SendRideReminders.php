@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Events\RideReminder;
 use App\Models\GroupRide;
-use App\Notifications\RideReminder;
 use Illuminate\Console\Command;
 
 class SendRideReminders extends Command
@@ -23,14 +23,17 @@ class SendRideReminders extends Command
             ->with(['route', 'confirmedAttendees.user'])
             ->chunkById(100, function ($rides) use (&$sent) {
                 foreach ($rides as $ride) {
-                    foreach ($ride->confirmedAttendees as $attendee) {
-                        if (! $attendee->user || $attendee->ride_version !== $ride->version) {
-                            continue;
-                        }
+                    $users = $ride->confirmedAttendees
+                        ->filter(fn ($attendee) => $attendee->user && $attendee->ride_version === $ride->version)
+                        ->map(fn ($attendee) => $attendee->user)
+                        ->values();
 
-                        $attendee->user->notify(new RideReminder($ride));
-                        $sent++;
+                    if ($users->isEmpty()) {
+                        continue;
                     }
+
+                    event(new RideReminder($ride, $users));
+                    $sent += $users->count();
                 }
             });
 

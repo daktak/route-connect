@@ -49,4 +49,9 @@ return [
         'timeout' => (int) env('VALHALLA_TIMEOUT', 30),
     ],
 
+    'discord' => [
+        'webhook_url' => env('DISCORD_WEBHOOK_URL'),
+        'timeout' => (int) env('DISCORD_TIMEOUT', 5),
+    ],
+
 ];

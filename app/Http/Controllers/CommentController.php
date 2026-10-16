@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CommentCreated;
 use App\Models\Route;
 use App\Models\RouteComment;
-use App\Notifications\CommentReply;
-use App\Notifications\NewComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,21 +27,8 @@ class CommentController extends Controller
         $comment->load('user');
 
         $author = Auth::user();
-        $notified = [Auth::id()];
 
-        // Notify parent comment author on replies
-        if ($request->parent_id) {
-            $parent = RouteComment::with('user')->find($request->parent_id);
-            if ($parent && $parent->user && ! in_array($parent->user_id, $notified)) {
-                $parent->user->notify(new CommentReply($route, $comment, $author));
-                $notified[] = $parent->user_id;
-            }
-        }
-
-        // Notify route author
-        if ($route->user && ! in_array($route->user_id, $notified)) {
-            $route->user->notify(new NewComment($route, $comment, $author));
-        }
+        event(new CommentCreated($route, $comment, $author));
 
         return response()->json([
             'success' => true,

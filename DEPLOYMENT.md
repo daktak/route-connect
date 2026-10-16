@@ -12,7 +12,7 @@ Browser ──► nginx ──► PHP-FPM (8.3) ──► PostgreSQL 16 + PostGI
                  │
                  └── static assets from public/build
 cron ──► php artisan schedule:run   (ride reminders, ride status updates; optional surface analysis)
-supervisor (optional) ──► php artisan queue:work
+supervisor ──► php artisan queue:work   (Discord notifications)
 ```
 
 ## 1. Requirements
@@ -82,6 +82,10 @@ MAIL_FROM_ADDRESS="hello@example.com"
 OPEN_METEO_BASE_URL=https://api.open-meteo.com/v1/forecast
 OPEN_METEO_AIR_QUALITY_URL=https://air-quality-api.open-meteo.com/v1/air-quality
 VALHALLA_BASE_URL=https://valhalla1.openstreetmap.de
+
+# Discord notifications (webhook URL of the target channel; empty disables)
+DISCORD_WEBHOOK_URL=
+DISCORD_TIMEOUT=5
 ```
 
 Then:
@@ -158,19 +162,44 @@ so it needs outbound network access):
 30 3 * * * cd /var/www/route-connect && php artisan routes:analyze-surface --missing >> /dev/null 2>&1
 ```
 
-Current notifications use the database channel **synchronously**, so a queue
-worker is not required. The `email_notifications` / `telegram_chat_id` profile
-preferences are stored but email/Telegram delivery is **not implemented yet** —
-configure `MAIL_*` only when that ships. If you later queue jobs, run a worker
-under Supervisor:
+Current notifications use the database channel synchronously, but **Discord
+notifications are queued** (`App\Jobs\SendDiscordMessage`, `QUEUE_CONNECTION=database`).
+A queue worker is therefore **required for Discord posts to be delivered** — without
+one the jobs pile up in the `jobs` table and nothing reaches the room. Run a worker
+under Supervisor (or systemd):
 
 ```ini
 [program:route-connect-queue]
-command=php /var/www/route-connect/artisan queue:work --sleep=3 --tries=3
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/route-connect/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+directory=/var/www/route-connect
 autostart=true
 autorestart=true
+stopasgroup=true
+killasgroup=true
 user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/www/route-connect/storage/logs/worker.log
+stopwaitsecs=3600
 ```
+
+```sh
+sudo supervisorctl reread && sudo supervisorctl update
+sudo supervisorctl start route-connect-queue:*
+```
+
+- `--max-time=3600` recycles workers hourly to bound memory growth; `autorestart=true`
+  starts fresh ones. `--tries=3` matches the job's own retry limit.
+- `numprocs=2` (or more) gives concurrency; the database queue supports multiple workers.
+- Workers are long-lived, so **restart them after every deploy** that changes code or
+  config: `php artisan queue:restart` (graceful — workers exit after the current job).
+- Since `php artisan optimize` caches config, changing `DISCORD_WEBHOOK_URL` requires
+  `php artisan optimize` **followed by** `php artisan queue:restart`.
+
+If email/Telegram delivery is implemented later, configure `MAIL_*` / those channels
+then; the `email_notifications` / `telegram_chat_id` profile preferences are stored but
+delivery is still **not implemented**.
 
 ## 8. Web server
 
@@ -312,7 +341,10 @@ first if you are debugging).
 4. Confirm a private GPX download works
    (`/RouteConnect/routes/{id}/download`).
 5. `php artisan schedule:list` shows `rides:send-reminders` and `rides:mark-past-completed`.
-6. `tail storage/logs/laravel.log` is free of errors.
+6. The queue worker is running (`sudo supervisorctl status route-connect-queue:*`); create
+   or join a ride and confirm the post appears in the configured Discord channel.
+7. `php artisan queue:failed` is empty (no repeatedly failing Discord jobs).
+8. `tail storage/logs/laravel.log` is free of errors.
 
 ## 12. Redeploying
 
@@ -323,6 +355,7 @@ composer install --no-dev --optimize-autoloader
 npm ci && npm run build
 php artisan migrate --force
 php artisan optimize
+php artisan queue:restart
 sudo systemctl reload php8.3-fpm
 ```
 

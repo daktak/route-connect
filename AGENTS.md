@@ -43,7 +43,7 @@ Scheduled commands (`routes/console.php`): `rides:send-reminders` (08:00),
 `rides:derive-timezones` backfills the `group_rides.timezone` column via
 Open-Meteo and is run manually.
 
-`php artisan test` currently requires the `pdo_sqlite` extension (`php8.3-sqlite3`), which is not installed in this environment. Build a real DB connection or install the extension to run tests.
+`pdo_sqlite` is installed, but DB-backed tests cannot use the default in-memory SQLite: the `routes` migration creates a PostGIS `geometry` column and `USING GIST` index, which SQLite rejects. Tests that touch the DB (Auth/Profile) therefore error on migration; tests that avoid the DB run fine. Use a real PostgreSQL+PostGIS connection to exercise DB-backed tests.
 
 ## Conventions & Gotchas
 
@@ -54,7 +54,8 @@ Open-Meteo and is run manually.
 - **Migrations with PostGIS**: use `DB::unprepared()` for multi-statement SQL (functions, triggers, views). Do not add `notifications` to trigger-managed tables.
 - **Route preferences**: `route_filters` (JSON) and `route_view_mode` are columns on `users`, written by `RoutePreferenceController` — not cookies.
 - **Weather / air quality**: transient attributes attached to `GroupRide` models in `RideController` (`WeatherService`, `AirQualityService`), not database columns.
-- **Notifications**: all notifications deliver via the `database` channel only. `email_notifications` / `telegram_chat_id` are stored profile preferences but email/Telegram delivery is not implemented.
+- **Notifications**: database notifications deliver via the `database` channel only. `email_notifications` / `telegram_chat_id` are stored profile preferences but email/Telegram delivery is not implemented.
+- **Discord**: `DiscordService` posts messages to the webhook in `DISCORD_WEBHOOK_URL` (empty disables it). Actions dispatch events (`app/Events/`) whose listeners send the database notification and queue a `SendDiscordMessage` job, so a `php artisan queue:work` worker must be running for Discord posts to be delivered. Ride creation is Discord-only. Add new room messages in the relevant listener under `app/Listeners/`; they compose text via the `BuildsDiscordMessages` trait, using its `link()` helper for masked links and `escapeLabel()` for user-supplied names.
 - **Admin**: `User::isAdmin()` matches the user's (mutable) `email` against the `ADMIN_EMAILS` config list; admin routes rely on `UserPolicy`.
 - **Code style**: run `./vendor/bin/pint` before committing. Do not add comments unless requested.
 

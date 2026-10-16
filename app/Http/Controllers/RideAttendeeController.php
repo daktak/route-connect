@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\RideJoined;
+use App\Events\RideLeft;
 use App\Models\GroupRide;
 use App\Models\RideAttendee;
 use App\Models\RideRouteVote;
-use App\Notifications\RideJoined;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -60,10 +61,8 @@ class RideAttendeeController extends Controller
             'status' => 'confirmed',
         ]);
 
-        // Notify organizer
-        if ($ride->organizer_id !== Auth::id() && $ride->organizer) {
-            $ride->organizer->notify(new RideJoined($ride, Auth::user()));
-        }
+        // Notify organizer + Discord
+        event(new RideJoined($ride, Auth::user()));
 
         return response()->json([
             'success' => true,
@@ -92,6 +91,8 @@ class RideAttendeeController extends Controller
             ->where('user_id', Auth::id())
             ->where('ride_version', $ride->version)
             ->delete();
+
+        event(new RideLeft($ride, Auth::user()));
 
         return response()->json(['success' => true]);
     }

@@ -95,7 +95,8 @@ class SendRideRemindersTest extends TestCase
         Queue::fake();
 
         $attendee = User::factory()->create();
-        $this->makeRide(['reminder_sent_at' => now()->subHour()], $attendee);
+        $ride = $this->makeRide(attendee: $attendee);
+        $ride->forceFill(['reminder_sent_at' => now()->subHour()])->save();
 
         $this->artisan('rides:send-reminders')->assertSuccessful();
 

@@ -95,6 +95,67 @@ class DiscordIntegrationTest extends TestCase
         Queue::assertPushed(SendDiscordMessage::class, fn (SendDiscordMessage $job) => str_contains($job->content, '[Sunday \[Loop\]]('));
     }
 
+    public function test_ride_created_links_meeting_point_to_maps_when_coordinates_exist(): void
+    {
+        Queue::fake();
+
+        $ride = $this->ride([
+            'meeting_point_lat' => '-37.81750000',
+            'meeting_point_lng' => '144.96900000',
+        ]);
+
+        event(new RideCreated($ride, $this->user('Alice', 10)));
+
+        Queue::assertPushed(SendDiscordMessage::class, fn (SendDiscordMessage $job) => str_contains(
+            $job->content,
+            'leaving from [Fed Square](https://www.google.com/maps/search/?api=1&query=-37.8175%2C144.969)'
+        ));
+    }
+
+    public function test_ride_created_does_not_link_meeting_point_without_coordinates(): void
+    {
+        Queue::fake();
+
+        event(new RideCreated($this->ride(), $this->user('Alice', 10)));
+
+        Queue::assertPushed(SendDiscordMessage::class, fn (SendDiscordMessage $job) => str_contains($job->content, 'leaving from Fed Square')
+            && ! str_contains($job->content, 'google.com/maps'));
+    }
+
+    public function test_ride_created_keeps_fallback_meeting_point_unlinked_with_only_coordinates(): void
+    {
+        Queue::fake();
+
+        $ride = $this->ride([
+            'meeting_point_name' => null,
+            'meeting_point_lat' => '-37.81750000',
+            'meeting_point_lng' => '144.96900000',
+        ]);
+
+        event(new RideCreated($ride, $this->user('Alice', 10)));
+
+        Queue::assertPushed(SendDiscordMessage::class, fn (SendDiscordMessage $job) => str_contains($job->content, 'leaving from TBA')
+            && ! str_contains($job->content, 'google.com/maps'));
+    }
+
+    public function test_ride_created_escapes_markdown_in_linked_meeting_point(): void
+    {
+        Queue::fake();
+
+        $ride = $this->ride([
+            'meeting_point_name' => 'Fed [Square]',
+            'meeting_point_lat' => '-37.81750000',
+            'meeting_point_lng' => '144.96900000',
+        ]);
+
+        event(new RideCreated($ride, $this->user('Alice', 10)));
+
+        Queue::assertPushed(SendDiscordMessage::class, fn (SendDiscordMessage $job) => str_contains(
+            $job->content,
+            'leaving from [Fed \[Square\]](https://www.google.com/maps/search/?api=1&query=-37.8175%2C144.969)'
+        ));
+    }
+
     public function test_ride_joined_notifies_organizer_and_posts(): void
     {
         Queue::fake();

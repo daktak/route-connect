@@ -88,6 +88,21 @@ class GroupRide extends Model
         return $this->timezone ?: config('app.default_timezone');
     }
 
+    /**
+     * Cross-platform Google Maps link for the ride's meeting point.
+     */
+    public function meetingPointMapUrl(): ?string
+    {
+        if (! is_numeric($this->meeting_point_lat) || ! is_numeric($this->meeting_point_lng)) {
+            return null;
+        }
+
+        $lat = (float) $this->meeting_point_lat;
+        $lng = (float) $this->meeting_point_lng;
+
+        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode("{$lat},{$lng}");
+    }
+
     public function getIsPastAttribute(): bool
     {
         return $this->ride_date->isPast();

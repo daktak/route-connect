@@ -18,7 +18,11 @@ class NotifyRideCreated
         $routeUrl = $ride->route
             ? route('routes.show', $ride->route)
             : route('rides.show', $ride);
-        $meeting = $ride->meeting_point_name ?: 'TBA';
+        $meetingName = $ride->meeting_point_name;
+        $mapUrl = $ride->meetingPointMapUrl();
+        $meeting = $meetingName && $mapUrl
+            ? $this->link($meetingName, $mapUrl)
+            : ($meetingName ?: 'TBA');
 
         $this->sendToDiscord(
             "{$event->creator->name} has created a ride "

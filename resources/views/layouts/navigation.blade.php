@@ -57,13 +57,27 @@
                         <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="notification-dropdown">
                             <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-semibold text-gray-900">Notifications</h3>
-                                <button @click="markAllAsRead" class="text-xs text-primary hover:underline" x-show="unreadCount > 0">Mark all read</button>
+                                <div class="flex items-center gap-3">
+                                    <button @click="markAllAsRead" class="text-xs text-primary hover:underline" x-show="unreadCount > 0">Mark all read</button>
+                                    <button @click="clearAll" class="text-xs text-gray-500 hover:text-red-600 hover:underline" x-show="notifications.length > 0">Clear all</button>
+                                </div>
                             </div>
 
                             <template x-for="notification in notifications" :key="notification.id">
-                                <div @click="markAsRead(notification.id)" class="notification-item" :class="{ unread: !notification.read_at }">
-                                    <p class="text-sm text-gray-900" x-html="notification.data.message"></p>
-                                    <p class="text-xs text-gray-500 mt-1" x-text="formatTime(notification.created_at)"></p>
+                                <div class="notification-item group relative" :class="{ unread: !notification.read_at }">
+                                    <a :href="safeUrl(notification.data.url) || '#'"
+                                       @click="markAsRead(notification)"
+                                       class="block pr-6">
+                                        <p class="text-sm text-gray-900" x-text="notification.data.message"></p>
+                                        <p class="text-xs text-gray-500 mt-1" x-text="formatTime(notification.created_at)"></p>
+                                    </a>
+                                    <button @click.prevent.stop="dismiss(notification)"
+                                            class="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-600 transition-opacity opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                                            aria-label="Dismiss notification">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </template>
 

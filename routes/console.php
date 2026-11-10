@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('rides:send-reminders')->hourly()->withoutOverlapping();
 Schedule::command('rides:mark-past-completed')->hourly()->withoutOverlapping();
+Schedule::command('notifications:prune')->dailyAt('03:00')->withoutOverlapping();

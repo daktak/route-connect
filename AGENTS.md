@@ -41,6 +41,9 @@ Scheduled commands (`routes/console.php`): `rides:send-reminders` and
 `rides:mark-past-completed`, both hourly. Reminders fire once per ride when it
 falls within `RIDE_REMINDER_HOURS` (default 24, `config/rides.php`) of its start
 time, tracked by `group_rides.reminder_sent_at`.
+`notifications:prune` runs daily at 03:00 and deletes read notifications older
+than `NOTIFICATION_RETENTION_DAYS` (default 90, `config/notifications.php`);
+unread notifications are never pruned automatically.
 `routes:analyze-surface` is **not** scheduled and calls the external Valhalla API.
 `rides:derive-timezones` backfills the `group_rides.timezone` column via
 Open-Meteo and is run manually.

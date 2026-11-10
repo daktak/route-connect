@@ -81,6 +81,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
 Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read')->middleware('auth');
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all')->middleware('auth');
+Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all')->middleware('auth');
+Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy')->middleware('auth');
 
 // GPX API
 Route::post('/api/routes/parse-gpx', [GpxController::class, 'parse'])->name('api.routes.parse-gpx');

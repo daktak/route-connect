@@ -584,22 +584,25 @@ Alpine.data('notificationBell', () => ({
         }
     },
 
-    async markAsRead(id) {
+    async markAsRead(notification) {
+        if (notification.read_at) return;
+
         try {
-            await fetch(appUrl(`/notifications/${id}/read`), {
+            await fetch(appUrl(`/notifications/${notification.id}/read`), {
                 method: 'POST',
                 credentials: 'same-origin',
+                keepalive: true,
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                     Accept: 'application/json',
                 },
             });
-            const notif = this.notifications.find(n => n.id === id);
-            if (notif) notif.read_at = new Date().toISOString();
-            this.unreadCount = Math.max(0, this.unreadCount - 1);
         } catch (e) {
             console.error('Failed to mark notification as read', e);
         }
+
+        notification.read_at = new Date().toISOString();
+        this.unreadCount = Math.max(0, this.unreadCount - 1);
     },
 
     async markAllAsRead() {
@@ -616,6 +619,66 @@ Alpine.data('notificationBell', () => ({
             this.unreadCount = 0;
         } catch (e) {
             console.error('Failed to mark all as read', e);
+        }
+    },
+
+    async dismiss(notification) {
+        try {
+            const response = await fetch(appUrl(`/notifications/${notification.id}`), {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    Accept: 'application/json',
+                },
+            });
+
+            if (!response.ok) return;
+        } catch (e) {
+            console.error('Failed to dismiss notification', e);
+            return;
+        }
+
+        this.notifications = this.notifications.filter(n => n.id !== notification.id);
+
+        if (!notification.read_at) {
+            this.unreadCount = Math.max(0, this.unreadCount - 1);
+        }
+    },
+
+    async clearAll() {
+        if (!confirm('Clear all notifications?')) return;
+
+        try {
+            const response = await fetch(appUrl('/notifications'), {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    Accept: 'application/json',
+                },
+            });
+
+            if (!response.ok) return;
+        } catch (e) {
+            console.error('Failed to clear notifications', e);
+            return;
+        }
+
+        this.notifications = [];
+        this.unreadCount = 0;
+    },
+
+    safeUrl(url) {
+        if (!url) return null;
+
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.origin !== window.location.origin) return null;
+
+            return parsed.pathname + parsed.search + parsed.hash;
+        } catch {
+            return null;
         }
     },
 

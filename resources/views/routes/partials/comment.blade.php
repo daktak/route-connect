@@ -1,4 +1,5 @@
-<div class="flex gap-3"
+<div id="comment-{{ $comment->id }}"
+     class="flex gap-3 scroll-mt-24"
      x-data="commentItem"
      data-comment-id="{{ $comment->id }}"
      data-route-id="{{ $comment->route_id }}"

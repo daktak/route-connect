@@ -80,15 +80,25 @@ MAIL_FROM_ADDRESS="hello@example.com"
 
 # Weather + air quality (Open-Meteo) and surface analysis (Valhalla)
 OPEN_METEO_BASE_URL=https://api.open-meteo.com/v1/forecast
+WEATHER_CACHE_TTL=1800
+WEATHER_FORECAST_DAYS=16
 OPEN_METEO_AIR_QUALITY_URL=https://air-quality-api.open-meteo.com/v1/air-quality
+AIR_QUALITY_CACHE_TTL=1800
+AIR_QUALITY_FORECAST_DAYS=5
 VALHALLA_BASE_URL=https://valhalla1.openstreetmap.de
+VALHALLA_TIMEOUT=30
 
 # Discord notifications (webhook URL of the target channel; empty disables)
 DISCORD_WEBHOOK_URL=
+# Public invite link shown in the notification dropdown; empty hides the link
+DISCORD_INVITE_URL=
 DISCORD_TIMEOUT=5
 
 # Hours before a ride starts that confirmed attendees are reminded
 RIDE_REMINDER_HOURS=24
+
+# Days to keep read notifications before the nightly prune deletes them
+NOTIFICATION_RETENTION_DAYS=90
 ```
 
 Then:
@@ -377,6 +387,12 @@ php artisan migrate --force
 php artisan optimize
 php artisan queue:restart
 sudo systemctl reload php8.3-fpm
+
+> If you changed `.env` during this deploy, `php artisan optimize` re-caches the new
+> values and `queue:restart` picks them up for the worker. Discord-related vars
+> (`DISCORD_WEBHOOK_URL`, `DISCORD_INVITE_URL`) and `APP_URL`/`ASSET_URL`/
+> `APP_FORCE_ROOT_URL` need the same sequence; `ASSET_URL` changes also require
+> `npm run build` (already above).
 ```
 
 Enable a short maintenance window for schema changes with

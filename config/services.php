@@ -60,6 +60,7 @@ return [
         'username' => env('MATRIX_USERNAME'),
         'password' => env('MATRIX_PASSWORD'),
         'room_ids' => array_filter(array_map('trim', explode(',', (string) env('MATRIX_ROOM_IDS', '')))),
+        'invite_url' => env('MATRIX_INVITE_URL'),
         'timeout' => (int) env('MATRIX_TIMEOUT', 5),
     ],
 

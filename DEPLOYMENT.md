@@ -101,6 +101,8 @@ MATRIX_HOMESERVER_URL=
 MATRIX_USERNAME=
 MATRIX_PASSWORD=
 MATRIX_ROOM_IDS=
+# Public invite link shown in the notification dropdown; empty hides the link
+MATRIX_INVITE_URL=
 MATRIX_TIMEOUT=5
 
 # Hours before a ride starts that confirmed attendees are reminded
@@ -402,7 +404,8 @@ sudo systemctl reload php8.3-fpm
 
 > If you changed `.env` during this deploy, `php artisan optimize` re-caches the new
 > values and `queue:restart` picks them up for the worker. Discord/Matrix vars
-> (`DISCORD_WEBHOOK_URL`, `DISCORD_INVITE_URL`, and all `MATRIX_*` settings) and
+> (`DISCORD_WEBHOOK_URL`, `DISCORD_INVITE_URL`, `MATRIX_INVITE_URL`, and all other
+> `MATRIX_*` settings) and
 > `APP_URL`/`ASSET_URL`/`APP_FORCE_ROOT_URL` need the same sequence; `ASSET_URL`
 > changes also require `npm run build` (already above).
 ```

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,7 @@ class MatrixService
         if ($homeserver !== '' && ! preg_match('#^https?://#i', $homeserver)) {
             $homeserver = 'https://'.$homeserver;
         }
+
         $username = (string) config('services.matrix.username');
         $password = (string) config('services.matrix.password');
         $roomIds = (array) config('services.matrix.room_ids', []);
@@ -36,44 +38,57 @@ class MatrixService
             }
 
             try {
-                $response = Http::timeout($timeout)
-                    ->withToken($token)
-                    ->acceptJson()
-                    ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId)."/send/m.room.message", [
-                        'msgtype' => 'm.text',
-                        'body' => $content,
-                    ]);
+                $response = $this->send($homeserver, $token, $roomId, $content, $timeout);
             } catch (\Throwable $e) {
                 Log::warning('Matrix send request failed', ['room' => $roomId, 'error' => $e->getMessage()]);
                 $ok = false;
                 continue;
             }
 
-            if (! $response->successful()) {
-                if ($response->status() === 401 || $response->status() === 403) {
-                    Cache::forget($this->tokenKey($username));
-                    $token = $this->accessToken($homeserver, $username, $password, $timeout);
-                    if ($token !== null) {
-                        try {
-                            $retry = Http::timeout($timeout)->withToken($token)->acceptJson()
-                                ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId)."/send/m.room.message", [
-                                    'msgtype' => 'm.text',
-                                    'body' => $content,
-                                ]);
-                            if ($retry->successful()) {
-                                continue;
-                            }
-                        } catch (\Throwable $e) {
-                            Log::warning('Matrix retry failed', ['room' => $roomId, 'error' => $e->getMessage()]);
-                        }
+            if ($response->status() === 401 || $response->status() === 403) {
+                Cache::forget($this->tokenKey($username));
+                $token = $this->accessToken($homeserver, $username, $password, $timeout);
+                if ($token !== null) {
+                    try {
+                        $response = $this->send($homeserver, $token, $roomId, $content, $timeout);
+                    } catch (\Throwable $e) {
+                        Log::warning('Matrix retry failed', ['room' => $roomId, 'error' => $e->getMessage()]);
                     }
                 }
-                Log::warning('Matrix send returned an error', ['room' => $roomId, 'status' => $response->status(), 'body' => mb_substr($response->body(), 0, 500)]);
+            }
+
+            if ($response->status() === 429) {
+                $retryAfterMs = (int) ($response->json('retry_after_ms') ?? 1000);
+                usleep(min(max($retryAfterMs, 250), 5000) * 1000);
+                try {
+                    $response = $this->send($homeserver, $token, $roomId, $content, $timeout);
+                } catch (\Throwable $e) {
+                    Log::warning('Matrix retry after rate limit failed', ['room' => $roomId, 'error' => $e->getMessage()]);
+                }
+            }
+
+            if (! $response->successful()) {
+                Log::warning('Matrix send returned an error', [
+                    'room' => $roomId,
+                    'status' => $response->status(),
+                    'body' => mb_substr($response->body(), 0, 500),
+                ]);
                 $ok = false;
             }
         }
 
         return $ok;
+    }
+
+    private function send(string $homeserver, string $token, string $roomId, string $content, int $timeout): Response
+    {
+        return Http::timeout($timeout)
+            ->withToken($token)
+            ->acceptJson()
+            ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId)."/send/m.room.message", [
+                'msgtype' => 'm.text',
+                'body' => $content,
+            ]);
     }
 
     private function accessToken(string $homeserver, string $username, string $password, int $timeout): ?string

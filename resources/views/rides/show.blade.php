@@ -51,7 +51,9 @@
                         <div>
                             <dt class="text-sm text-gray-500">Meeting Point</dt>
                             <dd class="font-medium text-gray-900">{{ $ride->meeting_point_name ?? 'Not specified' }}
-                                @php($meetingPointMapUrl = $ride->meetingPointMapUrl())
+                                @php
+                                    $meetingPointMapUrl = $ride->meetingPointMapUrl();
+                                @endphp
                                 @if($meetingPointMapUrl)
                                     <div x-data="rideDistance({{ $ride->meeting_point_lat }}, {{ $ride->meeting_point_lng }}, {{ Js::from($ride->meeting_point_name) }})" class="mt-1 text-sm text-gray-500" x-text="displayText"></div>
                                     <a href="{{ $meetingPointMapUrl }}" target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline">

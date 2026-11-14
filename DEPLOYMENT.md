@@ -94,6 +94,13 @@ DISCORD_WEBHOOK_URL=
 DISCORD_INVITE_URL=
 DISCORD_TIMEOUT=5
 
+# Matrix notifications (bot account posting to one or more rooms; empty disables)
+MATRIX_HOMESERVER_URL=
+MATRIX_USERNAME=
+MATRIX_PASSWORD=
+MATRIX_ROOM_IDS=
+MATRIX_TIMEOUT=5
+
 # Hours before a ride starts that confirmed attendees are reminded
 RIDE_REMINDER_HOURS=24
 

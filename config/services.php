@@ -55,4 +55,12 @@ return [
         'timeout' => (int) env('DISCORD_TIMEOUT', 5),
     ],
 
+    'matrix' => [
+        'homeserver_url' => env('MATRIX_HOMESERVER_URL'),
+        'username' => env('MATRIX_USERNAME'),
+        'password' => env('MATRIX_PASSWORD'),
+        'room_ids' => array_filter(array_map('trim', explode(',', (string) env('MATRIX_ROOM_IDS', '')))),
+        'timeout' => (int) env('MATRIX_TIMEOUT', 5),
+    ],
+
 ];

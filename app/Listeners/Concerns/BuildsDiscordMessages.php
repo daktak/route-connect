@@ -3,6 +3,7 @@
 namespace App\Listeners\Concerns;
 
 use App\Jobs\SendDiscordMessage;
+use App\Jobs\SendMatrixMessage;
 use App\Models\GroupRide;
 
 trait BuildsDiscordMessages
@@ -38,5 +39,6 @@ trait BuildsDiscordMessages
     protected function sendToDiscord(string $content): void
     {
         SendDiscordMessage::dispatch($content);
+        SendMatrixMessage::dispatch($content);
     }
 }

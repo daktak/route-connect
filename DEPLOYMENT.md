@@ -12,7 +12,7 @@ Browser ──► nginx ──► PHP-FPM (8.3) ──► PostgreSQL 16 + PostGI
                  │
                  └── static assets from public/build
 cron ──► php artisan schedule:run   (ride reminders, ride status updates; optional surface analysis)
-supervisor ──► php artisan queue:work   (Discord notifications)
+supervisor ──► php artisan queue:work   (Discord + Matrix notifications)
 ```
 
 ## 1. Requirements
@@ -95,6 +95,8 @@ DISCORD_INVITE_URL=
 DISCORD_TIMEOUT=5
 
 # Matrix notifications (bot account posting to one or more rooms; empty disables)
+# MATRIX_USERNAME may be a full user ID (@bot:matrix.org) or just the localpart.
+# MATRIX_ROOM_IDS is comma-separated; the bot must already have joined each room.
 MATRIX_HOMESERVER_URL=
 MATRIX_USERNAME=
 MATRIX_PASSWORD=
@@ -184,11 +186,12 @@ so it needs outbound network access):
 30 3 * * * cd /var/www/route-connect && php artisan routes:analyze-surface --missing >> /dev/null 2>&1
 ```
 
-Current notifications use the database channel synchronously, but **Discord
-notifications are queued** (`App\Jobs\SendDiscordMessage`, `QUEUE_CONNECTION=database`).
-A queue worker is therefore **required for Discord posts to be delivered** — without
-one the jobs pile up in the `jobs` table and nothing reaches the room. Run a worker
-under Supervisor (or systemd):
+Current notifications use the database channel synchronously, but **Discord and
+Matrix notifications are queued** (`App\Jobs\SendDiscordMessage` and
+`App\Jobs\SendMatrixMessage`, `QUEUE_CONNECTION=database`). A queue worker is
+therefore **required for Discord or Matrix posts to be delivered** — without one the
+jobs pile up in the `jobs` table and nothing reaches the channels. Run a worker under
+Supervisor (or systemd):
 
 ```ini
 [program:route-connect-queue]
@@ -216,8 +219,9 @@ sudo supervisorctl start route-connect-queue:*
 - `numprocs=2` (or more) gives concurrency; the database queue supports multiple workers.
 - Workers are long-lived, so **restart them after every deploy** that changes code or
   config: `php artisan queue:restart` (graceful — workers exit after the current job).
-- Since `php artisan optimize` caches config, changing `DISCORD_WEBHOOK_URL` requires
-  `php artisan optimize` **followed by** `php artisan queue:restart`.
+- Since `php artisan optimize` caches config, changing Discord or Matrix settings
+  requires `php artisan optimize` **followed by** `php artisan queue:restart`.
+  Matrix also needs the bot to be joined to every room in `MATRIX_ROOM_IDS`.
 
 If email/Telegram delivery is implemented later, configure `MAIL_*` / those channels
 then; the `email_notifications` / `telegram_chat_id` profile preferences are stored but
@@ -379,8 +383,9 @@ first if you are debugging).
    (`/RouteConnect/routes/{id}/download`).
 5. `php artisan schedule:list` shows `rides:send-reminders` and `rides:mark-past-completed`.
 6. The queue worker is running (`sudo supervisorctl status route-connect-queue:*`); create
-   or join a ride and confirm the post appears in the configured Discord channel.
-7. `php artisan queue:failed` is empty (no repeatedly failing Discord jobs).
+   or join a ride and confirm the post appears in the configured Discord channel and in
+   each Matrix room listed in `MATRIX_ROOM_IDS`.
+7. `php artisan queue:failed` is empty (no repeatedly failing Discord or Matrix jobs).
 8. `tail storage/logs/laravel.log` is free of errors.
 
 ## 12. Redeploying
@@ -396,10 +401,10 @@ php artisan queue:restart
 sudo systemctl reload php8.3-fpm
 
 > If you changed `.env` during this deploy, `php artisan optimize` re-caches the new
-> values and `queue:restart` picks them up for the worker. Discord-related vars
-> (`DISCORD_WEBHOOK_URL`, `DISCORD_INVITE_URL`) and `APP_URL`/`ASSET_URL`/
-> `APP_FORCE_ROOT_URL` need the same sequence; `ASSET_URL` changes also require
-> `npm run build` (already above).
+> values and `queue:restart` picks them up for the worker. Discord/Matrix vars
+> (`DISCORD_WEBHOOK_URL`, `DISCORD_INVITE_URL`, and all `MATRIX_*` settings) and
+> `APP_URL`/`ASSET_URL`/`APP_FORCE_ROOT_URL` need the same sequence; `ASSET_URL`
+> changes also require `npm run build` (already above).
 ```
 
 Enable a short maintenance window for schema changes with

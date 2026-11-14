@@ -42,6 +42,7 @@ class MatrixService
             } catch (\Throwable $e) {
                 Log::warning('Matrix send request failed', ['room' => $roomId, 'error' => $e->getMessage()]);
                 $ok = false;
+
                 continue;
             }
 
@@ -85,7 +86,7 @@ class MatrixService
         return Http::timeout($timeout)
             ->withToken($token)
             ->acceptJson()
-            ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId)."/send/m.room.message", [
+            ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId).'/send/m.room.message', [
                 'msgtype' => 'm.text',
                 'body' => $content,
                 'format' => 'org.matrix.custom.html',
@@ -120,11 +121,13 @@ class MatrixService
                 ]);
         } catch (\Throwable $e) {
             Log::warning('Matrix login request failed', ['error' => $e->getMessage()]);
+
             return null;
         }
 
         if (! $response->successful()) {
             Log::warning('Matrix login returned an error', ['status' => $response->status(), 'body' => mb_substr($response->body(), 0, 500)]);
+
             return null;
         }
 

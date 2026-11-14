@@ -11,6 +11,9 @@ class MatrixService
     public function post(string $content): bool
     {
         $homeserver = rtrim((string) config('services.matrix.homeserver_url'), '/');
+        if ($homeserver !== '' && ! preg_match('#^https?://#i', $homeserver)) {
+            $homeserver = 'https://'.$homeserver;
+        }
         $username = (string) config('services.matrix.username');
         $password = (string) config('services.matrix.password');
         $roomIds = (array) config('services.matrix.room_ids', []);

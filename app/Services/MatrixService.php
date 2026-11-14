@@ -88,7 +88,18 @@ class MatrixService
             ->post("{$homeserver}/_matrix/client/v3/rooms/".urlencode($roomId)."/send/m.room.message", [
                 'msgtype' => 'm.text',
                 'body' => $content,
+                'format' => 'org.matrix.custom.html',
+                'formatted_body' => $this->formattedBody($content),
             ]);
+    }
+
+    private function formattedBody(string $content): string
+    {
+        $html = htmlspecialchars($content, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $html = str_replace(['\\\\', '\\[', '\\]'], ['\\', '[', ']'], $html);
+        $html = preg_replace('/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/', '<a href="$2">$1</a>', $html);
+
+        return nl2br($html);
     }
 
     private function accessToken(string $homeserver, string $username, string $password, int $timeout): ?string

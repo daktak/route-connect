@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Routes Map</h1>
-                <p class="text-gray-600 mt-1">Explore routes on the map</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Routes Map</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Explore routes on the map</p>
             </div>
             @auth
                 <a href="{{ route('routes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
@@ -18,17 +18,17 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div x-data="routeMap({ routes: {{ Js::from($mapRoutes) }} })"
-             class="relative flex h-[calc(100vh-14rem)] rounded-lg overflow-hidden border border-gray-200"
+             class="relative flex h-[calc(100vh-14rem)] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
              style="min-height: 600px;">
 
             <!-- Sidebar -->
             <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                   class="absolute md:relative inset-y-0 left-0 z-30 w-80 max-w-[85%] bg-white border-r border-gray-200 transform transition-transform duration-300 md:translate-x-0 flex flex-col">
+                   class="absolute md:relative inset-y-0 left-0 z-30 w-80 max-w-[85%] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 md:translate-x-0 flex flex-col">
                 <div class="flex flex-col h-full">
                     <!-- Header -->
-                    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900">Routes</h2>
-                        <button @click="sidebarOpen = false" class="md:hidden p-1 text-gray-500 hover:text-gray-700" aria-label="Close filters">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Routes</h2>
+                        <button @click="sidebarOpen = false" class="md:hidden p-1 text-gray-500 hover:text-gray-700 dark:text-gray-300" aria-label="Close filters">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -38,12 +38,12 @@
                     <!-- Filters -->
                     <div x-data="routeFilters" class="p-4 overflow-y-auto flex-1">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
                             <input type="text" x-model="filters.search" placeholder="Search routes..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
                             <select x-model="filters.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="">All</option>
                                 <option value="easy">Easy</option>
@@ -54,19 +54,19 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Features</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Features</label>
                             <div class="flex flex-wrap gap-2">
                                 <template x-for="feature in availableFeatures" :key="feature.value">
                                     <label class="inline-flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" :value="feature.value" x-model="filters.features" class="rounded border-gray-300 text-primary focus:ring-primary">
-                                        <span class="text-sm text-gray-700" x-text="feature.label"></span>
+                                        <span class="text-sm text-gray-700 dark:text-gray-300" x-text="feature.label"></span>
                                     </label>
                                 </template>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
                             <select x-model="filters.sort" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="newest">Newest First</option>
                                 <option value="distance_asc">Distance: Short to Long</option>
@@ -83,8 +83,8 @@
                     </div>
 
                     <!-- Routes List in Sidebar -->
-                    <div class="p-4 border-t border-gray-200 max-h-64 overflow-y-auto">
-                        <h3 class="font-medium text-gray-900 mb-3">Routes ({{ $routes->count() }})</h3>
+                    <div class="p-4 border-t border-gray-200 dark:border-gray-700 max-h-64 overflow-y-auto">
+                        <h3 class="font-medium text-gray-900 dark:text-gray-100 mb-3">Routes ({{ $routes->count() }})</h3>
                         <x-map-sidebar :map-routes="$mapRoutes" />
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                 <div x-ref="map" x-init="initMap($el)" class="absolute inset-0"></div>
 
                 <!-- Locate Button -->
-                <button @click="locateUser()" class="absolute top-4 right-4 z-20 bg-white shadow-lg rounded-lg p-2 text-gray-700 hover:text-primary transition-colors" title="Center on my location" aria-label="Center on my location">
+                <button @click="locateUser()" class="absolute top-4 right-4 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-2 text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" title="Center on my location" aria-label="Center on my location">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8a4 4 0 100 8 4 4 0 000-8z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
@@ -103,19 +103,19 @@
                 </button>
 
                 <!-- Sidebar Toggle (Mobile) -->
-                <button @click="sidebarOpen = !sidebarOpen" class="absolute bottom-4 left-4 z-20 bg-white shadow-lg rounded-full p-3 md:hidden" aria-label="Toggle filters">
-                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button @click="sidebarOpen = !sidebarOpen" class="absolute bottom-4 left-4 z-20 bg-white dark:bg-gray-800 shadow-lg rounded-full p-3 md:hidden" aria-label="Toggle filters">
+                    <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
 
                 <!-- Route Detail Panel (when selected) -->
                 <div x-show="selectedRoute" x-cloak x-transition
-                     class="absolute inset-y-0 right-0 z-20 w-96 max-w-full bg-white shadow-lg border-l border-gray-200 overflow-y-auto">
+                     class="absolute inset-y-0 right-0 z-20 w-96 max-w-full bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 overflow-y-auto">
                     <div class="flex flex-col h-full">
-                        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 class="font-semibold text-gray-900" x-text="selectedRoute ? selectedRoute.name : ''"></h3>
-                            <button @click="selectedRoute = null" class="p-1 text-gray-500 hover:text-gray-700" aria-label="Close details">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <h3 class="font-semibold text-gray-900 dark:text-gray-100" x-text="selectedRoute ? selectedRoute.name : ''"></h3>
+                            <button @click="selectedRoute = null" class="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-300" aria-label="Close details">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
@@ -124,7 +124,7 @@
 
                         <div class="p-4 overflow-y-auto flex-1">
                             <div class="space-y-3">
-                                <div class="flex items-center gap-3 text-sm text-gray-600">
+                                <div class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                                     <span class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
                                         <span x-text="selectedRoute ? selectedRoute.distance_km + ' km' : ''"></span>
@@ -136,10 +136,10 @@
                                     <span class="difficulty-badge" :class="selectedRoute ? selectedRoute.difficulty : ''" x-text="selectedRoute ? selectedRoute.difficulty : ''"></span>
                                 </div>
 
-                                <p class="text-sm text-gray-600 whitespace-pre-line" x-show="selectedRoute && selectedRoute.description" x-text="selectedRoute ? selectedRoute.description : ''"></p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line" x-show="selectedRoute && selectedRoute.description" x-text="selectedRoute ? selectedRoute.description : ''"></p>
 
                                 <div x-show="selectedRoute && selectedRoute.features && selectedRoute.features.length">
-                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Features</h4>
+                                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Features</h4>
                                     <div class="flex flex-wrap gap-1.5">
                                         <template x-for="feature in (selectedRoute ? selectedRoute.features : [])" :key="feature.id">
                                             <span class="feature-badge" :class="feature.feature_type" x-html="feature.icon + ' ' + feature.label"></span>
@@ -157,9 +157,9 @@
                                     <span class="text-gray-500" x-text="selectedRoute ? '(' + selectedRoute.rating_count + ' reviews)' : ''"></span>
                                 </div>
 
-                                <div class="pt-4 border-t border-gray-100 flex gap-2" x-show="selectedRoute">
+                                <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex gap-2" x-show="selectedRoute">
                                     <a :href="selectedRoute ? '/routes/' + selectedRoute.id : '#'" class="flex-1 bg-primary text-white text-center py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors">View Details</a>
-                                    <a x-show="selectedRoute && selectedRoute.upcoming_rides && selectedRoute.upcoming_rides.length" :href="selectedRoute ? '/rides/' + selectedRoute.upcoming_rides[0].id : '#'" class="flex-1 border border-gray-300 text-gray-700 text-center py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Join Ride</a>
+                                    <a x-show="selectedRoute && selectedRoute.upcoming_rides && selectedRoute.upcoming_rides.length" :href="selectedRoute ? '/rides/' + selectedRoute.upcoming_rides[0].id : '#'" class="flex-1 border border-gray-300 text-gray-700 dark:text-gray-300 text-center py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Join Ride</a>
                                 </div>
                             </div>
                         </div>

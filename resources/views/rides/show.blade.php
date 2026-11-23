@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ $ride->title ?? $ride->route->name }}</h1>
-                <p class="text-gray-600 mt-1">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $ride->title ?? $ride->route->name }}</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">
                     {{ $ride->ride_date->timezone($ride->timezoneName())->format('l, F j, Y \a\t g:i A') }}
                     @if($ride->meeting_point_name)
                         • {{ $ride->meeting_point_name }}
@@ -14,7 +14,7 @@
                 <span class="ride-status {{ $ride->status }}">{{ ucfirst($ride->status) }}</span>
                 @auth
                     @can('update', $ride)
-                        <a href="{{ route('rides.edit', $ride) }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Edit</a>
+                        <a href="{{ route('rides.edit', $ride) }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Edit</a>
                     @endcan
                 @endauth
             </div>
@@ -26,7 +26,7 @@
             <!-- Main Content -->
             <div class="lg:col-span-2 space-y-8">
                 <!-- Route Map -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                     <div class="aspect-video relative">
                         <div id="ride-map" class="absolute inset-0" x-data="routeMap({
                             routeGeometry: {{ Js::from($ride->route->geometry) }},
@@ -41,16 +41,16 @@
                 </div>
 
                 <!-- Ride Details -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ride Details</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ride Details</h3>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <dt class="text-sm text-gray-500">Date & Time</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, F j, Y \a\t g:i A') }} <span class="text-gray-400" title="Ride timezone">{{ $ride->timezoneName() }}</span></dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, F j, Y \a\t g:i A') }} <span class="text-gray-400" title="Ride timezone">{{ $ride->timezoneName() }}</span></dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Meeting Point</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->meeting_point_name ?? 'Not specified' }}
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $ride->meeting_point_name ?? 'Not specified' }}
                                 @php
                                     $meetingPointMapUrl = $ride->meetingPointMapUrl();
                                 @endphp
@@ -65,13 +65,13 @@
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">{{ $multipleRoutes ? 'Routes' : 'Route' }}</dt>
-                            <dd class="font-medium text-gray-900">
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">
                                 <ul class="space-y-1">
                                     @foreach($ride->routeOptions as $option)
                                         <li class="flex items-center gap-2">
                                             <a href="{{ route('routes.show', $option->route) }}" class="text-primary hover:underline">{{ $option->route->name }}</a>
                                             @if($multipleRoutes && $loop->first)
-                                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">Default</span>
+                                                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">Default</span>
                                             @endif
                                         </li>
                                     @endforeach
@@ -80,7 +80,7 @@
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Distance / Elevation</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->route->distance_km }} km • {{ $ride->route->elevation_gain_m }}m</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $ride->route->distance_km }} km • {{ $ride->route->elevation_gain_m }}m</dd>
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Difficulty</dt>
@@ -88,11 +88,11 @@
                         </div>
                         <div>
                             <dt class="text-sm text-gray-500">Max Participants</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->max_participants ?? 'No limit' }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $ride->max_participants ?? 'No limit' }}</dd>
                         </div>
 <div>
                             <dt class="text-sm text-gray-500">Organizer</dt>
-                            <dd class="font-medium text-gray-900">{{ $ride->organizer->name }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $ride->organizer->name }}</dd>
                         </div>
                         @if($ride->weather && ($ride->weather['sunrise'] ?? null) && ($ride->weather['sunset'] ?? null))
                             @php
@@ -124,7 +124,7 @@
                         @endif
                         <div class="md:col-span-2">
                             <dt class="text-sm text-gray-500">Description</dt>
-                            <dd class="font-medium text-gray-900 whitespace-pre-line">{{ $ride->description ?? 'No description provided' }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $ride->description ?? 'No description provided' }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -139,10 +139,10 @@
                         $myVote = auth()->check() ? $ride->currentUserVote(auth()->id()) : null;
                         $selectedRouteId = $myVote?->route_id;
                     @endphp
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-100" x-data="rideVote({{ $ride->id }}, {{ Js::from($selectedRouteId ? (int) $selectedRouteId : null) }})">
-                        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800" x-data="rideVote({{ $ride->id }}, {{ Js::from($selectedRouteId ? (int) $selectedRouteId : null) }})">
+                        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900">Route Voting</h3>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Route Voting</h3>
                                 <p class="text-sm text-gray-500 mt-1">{{ $totalVotes }} {{ \Illuminate\Support\Str::plural('vote', $totalVotes) }} cast</p>
                             </div>
                             @if($canVote)
@@ -166,7 +166,7 @@
                                     <div class="flex items-start justify-between gap-4">
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-2">
-                                                <a href="{{ route('routes.show', $route) }}" class="font-medium text-gray-900 hover:text-primary truncate">{{ $route->name }}</a>
+                                                <a href="{{ route('routes.show', $route) }}" class="font-medium text-gray-900 dark:text-gray-100 hover:text-primary truncate">{{ $route->name }}</a>
                                                 @if($isLeading)
                                                     <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">Leading</span>
                                                 @endif
@@ -176,7 +176,7 @@
                                         </div>
                                         <div class="flex items-center gap-3 flex-shrink-0">
                                             <div class="text-right">
-                                                <p class="font-semibold text-gray-900">{{ $count }}</p>
+                                                <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $count }}</p>
                                                 <p class="text-xs text-gray-500">{{ $pct }}%</p>
                                             </div>
                                             @if($canVote)
@@ -189,7 +189,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <div class="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="mt-3 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                                         <div class="h-full bg-primary rounded-full transition-all" style="width: {{ $pct }}%"></div>
                                     </div>
                                 </div>
@@ -199,9 +199,9 @@
                 @endif
 
                 <!-- Attendees -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100">
-                    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Attendees ({{ $ride->attendees_count }}{{ $ride->max_participants ? ' / ' . $ride->max_participants : '' }})</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
+                    <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendees ({{ $ride->attendees_count }}{{ $ride->max_participants ? ' / ' . $ride->max_participants : '' }})</h3>
                         @auth
                             @php
                                 $attendee = $ride->attendees()->where('user_id', auth()->id())->where('ride_version', $ride->version)->first();
@@ -216,13 +216,13 @@
 
                     <div class="divide-y divide-gray-100">
                         @foreach($ride->attendees()->where('ride_version', $ride->version)->with('user')->get() as $attendee)
-                            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:bg-gray-900">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
                                         {{ strtoupper($attendee->user->name[0]) }}
                                     </div>
                                     <div>
-                                        <p class="font-medium text-gray-900">{{ $attendee->user->name }}</p>
+                                        <p class="font-medium text-gray-900 dark:text-gray-100">{{ $attendee->user->name }}</p>
                                         <p class="text-sm text-gray-500">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                                 {{ $attendee->status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -255,26 +255,26 @@
                     $leadingRoute = $ride->leadingRoute();
                     $hasMultipleRoutes = $ride->routeOptions->count() > 1;
                 @endphp
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ $hasMultipleRoutes ? 'Leading Route' : 'Route Info' }}</h3>
-                    <p class="font-medium text-gray-900 mb-3">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ $hasMultipleRoutes ? 'Leading Route' : 'Route Info' }}</h3>
+                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-3">
                         <a href="{{ route('routes.show', $leadingRoute) }}" class="text-primary hover:underline">{{ $leadingRoute->name }}</a>
                     </p>
                     <div class="space-y-3">
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Distance</span>
+                            <span class="text-gray-600 dark:text-gray-400">Distance</span>
                             <span class="font-semibold">{{ $leadingRoute->distance_km }} km</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Elevation Gain</span>
+                            <span class="text-gray-600 dark:text-gray-400">Elevation Gain</span>
                             <span class="font-semibold">{{ $leadingRoute->elevation_gain_m }} m</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Difficulty</span>
+                            <span class="text-gray-600 dark:text-gray-400">Difficulty</span>
                             <span class="difficulty-badge {{ $leadingRoute->difficulty }}">{{ ucfirst($leadingRoute->difficulty) }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Est. Time</span>
+                            <span class="text-gray-600 dark:text-gray-400">Est. Time</span>
                             <span class="font-semibold">{{ $leadingRoute->formatted_duration ?? '—' }}</span>
                         </div>
                     </div>
@@ -292,14 +292,14 @@
                 @endif
 
                 <!-- Organizer -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Organizer</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Organizer</h3>
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
                             {{ strtoupper($ride->organizer->name[0]) }}
                         </div>
                         <div>
-                            <p class="font-semibold text-gray-900">{{ $ride->organizer->name }}</p>
+                            <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $ride->organizer->name }}</p>
                             <p class="text-sm text-gray-500">{{ $ride->organizer->routes()->count() }} routes</p>
                         </div>
                     </div>
@@ -307,9 +307,9 @@
 
                 <!-- Actions -->
                 @auth
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-3">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6 space-y-3">
                         @can('update', $ride)
-                            <a href="{{ route('rides.edit', $ride) }}" class="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg text-center font-medium hover:bg-gray-200 transition-colors block">Edit Ride</a>
+                            <a href="{{ route('rides.edit', $ride) }}" class="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-lg text-center font-medium hover:bg-gray-200 transition-colors block">Edit Ride</a>
                         @endcan
                         @can('delete', $ride)
                             <form method="POST" action="{{ route('rides.destroy', $ride) }}" onsubmit="return confirm('Delete this ride?')">

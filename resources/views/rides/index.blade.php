@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Group Rides</h1>
-                <p class="text-gray-600 mt-1">Find or organize group rides</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Group Rides</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Find or organize group rides</p>
             </div>
             @auth
                 <a href="{{ route('rides.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-hover transition-colors flex items-center gap-2">
@@ -20,11 +20,11 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Filters -->
             <aside class="lg:col-span-1">
-                <form method="GET" action="{{ route('rides.index') }}" class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 sticky top-24">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
+                <form method="GET" action="{{ route('rides.index') }}" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6 sticky top-24">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Filters</h2>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                         <select name="status" onchange="this.form.submit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                             <option value="upcoming" {{ $status === 'upcoming' ? 'selected' : '' }}>Upcoming</option>
                             <option value="past" {{ $status === 'past' ? 'selected' : '' }}>Past</option>
@@ -33,7 +33,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
                         <div class="space-y-2">
                             <input type="date" name="from" value="{{ $from }}" onchange="this.form.submit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="From">
                             <input type="date" name="to" value="{{ $to }}" onchange="this.form.submit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="To">
@@ -53,7 +53,7 @@
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                             {{ $status === 'past' ? 'No past rides found' : 'No group rides found' }}
                         </h3>
                         <p class="mt-1 text-sm text-gray-500">Try adjusting your filters or create the first group ride!</p>

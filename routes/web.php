@@ -38,6 +38,7 @@ Route::delete('/routes/{route}', [RouteController::class, 'destroy'])->name('rou
 // Route Preferences
 Route::put('/preferences/route-filters', [RoutePreferenceController::class, 'updateFilters'])->name('preferences.route-filters')->middleware('auth');
 Route::put('/preferences/route-view-mode', [RoutePreferenceController::class, 'updateViewMode'])->name('preferences.route-view-mode')->middleware('auth');
+Route::put('/preferences/theme', [RoutePreferenceController::class, 'updateTheme'])->name('preferences.theme')->middleware('auth');
 
 // Route Ratings
 Route::post('/routes/{route}/rate', [RatingController::class, 'store'])->name('routes.rate')->middleware('auth');

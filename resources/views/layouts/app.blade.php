@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    $theme = auth()->user()?->theme ?? 'system';
+    $darkClass = $theme === 'dark' ? 'dark' : '';
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $darkClass }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +11,7 @@
         <meta name="app-base-url" content="{{ url('/') }}">
         <meta name="user-authenticated" content="{{ auth()->check() ? '1' : '0' }}">
         <meta name="route-view-mode" content="{{ auth()->user()?->route_view_mode }}">
+<meta name="user-theme" content="{{ auth()->user()?->theme }}">
 
         <title>{{ config('app.name', 'Route Connect') }}</title>
 
@@ -16,9 +21,21 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script>
+            (function () {
+                var theme = @json($theme);
+                var isAuth = @json(auth()->check());
+                if (!isAuth) {
+                    try { theme = localStorage.getItem('theme') || 'system'; } catch (e) { theme = 'system'; }
+                }
+                var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            })();
+        </script>
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-50 flex flex-col">
+    <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 text-gray-900 dark:text-gray-100 dark:text-gray-100">
+        <div class="min-h-screen bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 flex flex-col">
             @include('layouts.navigation')
 
             @if (session('success'))
@@ -47,7 +64,7 @@
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white shadow-sm">
+                <header class="bg-white dark:bg-gray-800 shadow-sm">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
@@ -60,9 +77,9 @@
             </main>
 
             <!-- Footer -->
-            <footer class="bg-white border-t border-gray-200 py-8">
+            <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-8">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
-                    <p>&copy; {{ date('Y') }} {{ config('app.name') }}. <a href="https://github.com/daktak/route-connect" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-700">View on GitHub</a></p>
+                    <p>&copy; {{ date('Y') }} {{ config('app.name') }}. <a href="https://github.com/daktak/route-connect" target="_blank" rel="noopener noreferrer" class="underline hover:text-gray-700 dark:text-gray-300">View on GitHub</a></p>
                     <p class="mt-1">Version: {{ trim(exec('git rev-parse --short HEAD 2>/dev/null') ?: 'unknown') }}</p>
                 </div>
             </footer>

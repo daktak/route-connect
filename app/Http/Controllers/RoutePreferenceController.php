@@ -53,4 +53,15 @@ class RoutePreferenceController extends Controller
 
         return response()->noContent();
     }
+
+    public function updateTheme(Request $request)
+    {
+        $data = $request->validate([
+            'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
+        ]);
+
+        $request->user()->update(['theme' => $data['theme']]);
+
+        return response()->noContent();
+    }
 }

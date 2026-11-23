@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Edit Route</h1>
-                <p class="text-gray-600 mt-1">{{ $route->name }}</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Route</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $route->name }}</p>
             </div>
-            <a href="{{ route('routes.show', $route) }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">View Route</a>
+            <a href="{{ route('routes.show', $route) }}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">View Route</a>
         </div>
     </x-slot>
 
@@ -15,12 +15,12 @@
             @method('PUT')
 
             <!-- Basic Info -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Details</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Route Details</h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Route Name *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route Name *</label>
                         <input type="text" name="name" value="{{ old('name', $route->name) }}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         @error('name')
                             <p class="mt-1 text-red-600 text-sm">{{ $message }}</p>
@@ -28,7 +28,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
                         <select name="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                             <option value="easy" {{ $route->difficulty === 'easy' ? 'selected' : '' }}>Easy</option>
                             <option value="moderate" {{ $route->difficulty === 'moderate' ? 'selected' : '' }}>Moderate</option>
@@ -38,40 +38,40 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                         <textarea name="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">{{ old('description', $route->description) }}</textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Time (minutes)</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Time (minutes)</label>
                         <input type="number" name="estimated_time_min" value="{{ old('estimated_time_min', $route->estimated_time_min) }}" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                     </div>
 
                     <div>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="is_public" value="1" {{ old('is_public', $route->is_public) ? 'checked' : '' }} class="rounded border-gray-300 text-primary focus:ring-primary">
-                            <span class="text-sm text-gray-700">Public Route</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Public Route</span>
                         </label>
                     </div>
                 </div>
             </div>
 
             <!-- Features -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Features</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Route Features</h3>
 
                 <div class="flex flex-wrap gap-2 mb-4">
                     @foreach(\App\Models\RouteFeature::FEATURE_TYPES as $type => $label)
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="features[]" value="{{ $type }}" {{ $route->features->pluck('feature_type')->contains($type) ? 'checked' : '' }} class="rounded border-gray-300 text-primary focus:ring-primary">
-                            <span class="text-sm text-gray-700">{{ $label }}</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
                         </label>
                     @endforeach
                 </div>
 
                 @if($route->features->where('feature_type', 'custom')->count())
                     <div class="mb-4">
-                        <h4 class="font-medium text-gray-900 mb-2">Custom Features</h4>
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Custom Features</h4>
                         @foreach($route->features->where('feature_type', 'custom') as $feature)
                             <div class="flex items-center gap-2 mb-2">
                                 <span class="feature-badge custom">{{ $feature->icon }} {{ $feature->feature_subtype }}</span>
@@ -83,14 +83,14 @@
 
                 <div class="flex gap-2">
                     <input type="text" name="custom_feature" placeholder="Add custom feature..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                    <button type="button" onclick="addCustomFeature(this)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Add</button>
+                    <button type="button" onclick="addCustomFeature(this)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:bg-gray-900">Add</button>
                 </div>
             </div>
 
             <!-- Map Preview -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Route Map</h3>
-                <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden" x-data="routeMap({ routeGeometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }} })" x-init="
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Route Map</h3>
+                <div class="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden" x-data="routeMap({ routeGeometry: {{ Js::from($route->geometry) }}, difficulty: {{ Js::from($route->difficulty) }} })" x-init="
                     initMap();
                     if (routeGeometry) {
                         const color = getDifficultyColor(difficulty);
@@ -102,15 +102,15 @@
 
             <!-- GPX File Info -->
             @if($route->gpx_file_path)
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">GPX File</h3>
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">GPX File</h3>
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                         <div class="flex items-center gap-3">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
                             <div>
-                                <p class="font-medium text-gray-900">{{ basename($route->gpx_file_path) }}</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ basename($route->gpx_file_path) }}</p>
                                 <p class="text-sm text-gray-500">Uploaded {{ $route->created_at->diffForHumans() }}</p>
                             </div>
                         </div>
@@ -128,7 +128,7 @@
 
             <!-- Submit -->
             <div class="flex justify-end gap-4">
-                <a href="{{ route('routes.show', $route) }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</a>
+                <a href="{{ route('routes.show', $route) }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Cancel</a>
                 <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors">Save Changes</button>
             </div>
         </form>
@@ -145,10 +145,10 @@
             const value = input.value.trim();
             if (!value) return;
 
-            const container = btn.closest('.bg-white').querySelector('.flex.flex-wrap.gap-2');
+            const container = btn.closest('.bg-white dark:bg-gray-800').querySelector('.flex.flex-wrap.gap-2');
             const label = document.createElement('label');
             label.className = 'inline-flex items-center gap-2 cursor-pointer';
-            label.innerHTML = `<input type="checkbox" name="features[]" value="custom:${value}" checked class="rounded border-gray-300 text-primary focus:ring-primary"><span class="text-sm text-gray-700">${value}</span>`;
+            label.innerHTML = `<input type="checkbox" name="features[]" value="custom:${value}" checked class="rounded border-gray-300 text-primary focus:ring-primary"><span class="text-sm text-gray-700 dark:text-gray-300">${value}</span>`;
             container.appendChild(label);
             input.value = '';
         }

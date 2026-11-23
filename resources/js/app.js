@@ -1595,4 +1595,44 @@ Alpine.store('viewMode', {
     },
 });
 
+Alpine.store('theme', {
+    mode: 'system',
+    init() {
+        const serverTheme = document.querySelector('meta[name="user-theme"]')?.content;
+        if (serverTheme === 'light' || serverTheme === 'dark' || serverTheme === 'system') {
+            this.mode = serverTheme;
+            return;
+        }
+        try { this.mode = localStorage.getItem('theme') || 'system'; } catch (e) { this.mode = 'system'; }
+    },
+    apply() {
+        const dark = this.mode === 'dark' || (this.mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+    },
+    set(mode) {
+        this.mode = mode;
+        this.apply();
+        if (!isAuthenticated()) {
+            try { localStorage.setItem('theme', mode); } catch (e) {}
+            return;
+        }
+        fetch(appUrl('/preferences/theme'), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({ theme: mode }),
+            keepalive: true,
+        }).catch(() => {});
+    },
+});
+
+Alpine.store('theme').init();
+Alpine.store('theme').apply();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (Alpine.store('theme').mode === 'system') Alpine.store('theme').apply();
+});
+
 Alpine.start();

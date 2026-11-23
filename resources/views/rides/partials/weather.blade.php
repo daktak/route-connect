@@ -29,34 +29,34 @@
 @endphp
 
 @if($variant === 'detail')
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Weather at Start</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Weather at Start</h3>
         <div class="flex items-center gap-4">
             <span class="text-5xl leading-none" aria-hidden="true">{{ $weather['icon'] }}</span>
             <div>
-                <p class="text-3xl font-bold text-gray-900">{{ $temp }}C</p>
-                <p class="text-gray-600">{{ $weather['condition'] }}</p>
+                <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $temp }}C</p>
+                <p class="text-gray-600 dark:text-gray-400">{{ $weather['condition'] }}</p>
             </div>
         </div>
         <dl class="mt-5 space-y-2 text-sm">
             <div class="flex justify-between">
                 <dt class="text-gray-500">Feels like</dt>
-                <dd class="font-medium text-gray-900">{{ $weather['apparent'] !== null ? round($weather['apparent']) . '°C' : '—' }}</dd>
+                <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $weather['apparent'] !== null ? round($weather['apparent']) . '°C' : '—' }}</dd>
             </div>
             <div class="flex justify-between">
                 <dt class="text-gray-500">Chance of rain</dt>
-                <dd class="font-medium text-gray-900">{{ $rain }}</dd>
+                <dd class="font-medium text-gray-900 dark:text-gray-100">{{ $rain }}</dd>
             </div>
             <div class="flex justify-between">
                 <dt class="text-gray-500">Wind</dt>
-                <dd class="font-medium text-gray-900">
+                <dd class="font-medium text-gray-900 dark:text-gray-100">
                     {{ $wind }}@if($weather['wind_gusts'] !== null) <span class="text-gray-500 font-normal">(gusts {{ round($weather['wind_gusts']) }} km/h)</span>@endif
                 </dd>
             </div>
             @if($uv !== null)
                 <div class="flex justify-between">
                     <dt class="text-gray-500">UV index (max)</dt>
-                    <dd class="font-medium text-gray-900">
+                    <dd class="font-medium text-gray-900 dark:text-gray-100">
                         {{ round($uv) }} <span class="ml-1 px-1.5 py-0.5 rounded text-xs {{ $uvClass }}">{{ $uvLevel }}</span>
                     </dd>
                 </div>
@@ -64,7 +64,7 @@
             @if($airQuality)
                 <div class="flex justify-between">
                     <dt class="text-gray-500">Air quality</dt>
-                    <dd class="font-medium text-gray-900">
+                    <dd class="font-medium text-gray-900 dark:text-gray-100">
                         {{ $airQuality['aqi'] }} <span class="ml-1 px-1.5 py-0.5 rounded text-xs {{ $aqiClass }}" title="{{ $aqiScale }} AQI">{{ $aqiLevel }}</span>
                     </dd>
                 </div>
@@ -74,10 +74,10 @@
         <p class="mt-1 text-xs text-gray-400">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" class="hover:underline">Open-Meteo</a>@if($airQuality) · Air quality (CAMS)@endif</p>
     </div>
 @else
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 mb-4" title="{{ $tooltip }}">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400 mb-4" title="{{ $tooltip }}">
         <span class="flex items-center gap-1.5">
             <span class="text-lg leading-none" aria-hidden="true">{{ $weather['icon'] }}</span>
-            <span class="font-semibold text-gray-900">{{ $temp }}C</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $temp }}C</span>
         </span>
         <span class="flex items-center gap-1" title="Chance of rain">
             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m0 0a6 6 0 01-6-6c0-3 6-12 6-12s6 9 6 12a6 6 0 01-6 6z"/></svg>

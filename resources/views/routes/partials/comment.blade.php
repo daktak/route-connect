@@ -9,14 +9,14 @@
     </div>
     <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-1">
-            <span class="font-medium text-gray-900">{{ $comment->user->name }}</span>
+            <span class="font-medium text-gray-900 dark:text-gray-100">{{ $comment->user->name }}</span>
             <span class="text-sm text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
             @if($comment->is_edited)
                 <span class="text-xs text-gray-400">(edited)</span>
             @endif
         </div>
 
-        <div x-show="!editing" class="text-gray-700 whitespace-pre-line">{{ $comment->content }}</div>
+        <div x-show="!editing" class="text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $comment->content }}</div>
         <textarea x-show="editing" x-model="editContent" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" rows="3" x-cloak></textarea>
 
         <div class="flex items-center gap-3 mt-2">
@@ -34,7 +34,7 @@
         </div>
 
         <!-- Reply Form -->
-        <div x-show="replyOpen" x-cloak x-transition class="mt-3 ml-10 border-l-2 border-gray-200 pl-4">
+        <div x-show="replyOpen" x-cloak x-transition class="mt-3 ml-10 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
             @auth
                 <form @submit.prevent="submitReply()" class="space-y-2">
                     <textarea name="content" x-model="replyContent" rows="2" placeholder="Write a reply..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent" required></textarea>
@@ -50,7 +50,7 @@
 
         <!-- Replies -->
         @if($comment->replies->count())
-            <div class="mt-4 ml-10 border-l-2 border-gray-200 pl-4 space-y-3">
+            <div class="mt-4 ml-10 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-3">
                 @foreach($comment->replies as $reply)
                     @include('routes.partials.comment', ['comment' => $reply])
                 @endforeach

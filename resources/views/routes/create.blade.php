@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Add New Route</h1>
-            <p class="text-gray-600 mt-1">Upload a GPX file to create a route</p>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Add New Route</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Upload a GPX file to create a route</p>
         </div>
     </x-slot>
 
@@ -11,8 +11,8 @@
             @csrf
 
             <!-- GPX Upload -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">1. Upload GPX File</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">1. Upload GPX File</h3>
 
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
                      @dragover.prevent @drop.prevent="handleDrop($event)"
@@ -21,8 +21,8 @@
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                     </svg>
-                    <p class="mt-2 text-gray-600" x-show="!file">Drag & drop a GPX file here, or click to select</p>
-                    <p class="mt-2 text-gray-600 font-medium" x-show="file" x-cloak x-text="file ? file.name : ''"></p>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400" x-show="!file">Drag & drop a GPX file here, or click to select</p>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400 font-medium" x-show="file" x-cloak x-text="file ? file.name : ''"></p>
                     <p class="text-sm text-gray-400 mt-1">Supports .gpx files up to 10MB</p>
                 </div>
 
@@ -40,16 +40,16 @@
 
             <!-- GPX Preview -->
             <template x-if="preview">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">2. Review & Edit</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">2. Review & Edit</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Route Name *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route Name *</label>
                             <input type="text" name="name" x-model="preview.name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Difficulty</label>
                             <select name="difficulty" x-model="preview.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="easy">Easy</option>
                                 <option value="moderate">Moderate</option>
@@ -58,46 +58,46 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                             <textarea name="description" x-model="preview.description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Time (minutes)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Time (minutes)</label>
                             <input type="number" name="estimated_time_min" x-model="preview.estimated_time_min" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Public Route</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Public Route</label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" name="is_public" value="1" checked class="rounded border-gray-300 text-primary focus:ring-primary">
-                                <span class="text-sm text-gray-700">Visible to all users</span>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Visible to all users</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Stats Preview -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6 grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6 grid grid-cols-3 gap-4 text-center">
                         <div>
-                            <div class="text-2xl font-bold text-gray-900" x-text="preview.distance_km + ' km'"></div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-gray-100" x-text="preview.distance_km + ' km'"></div>
                             <div class="text-sm text-gray-500">Distance</div>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-gray-900" x-text="preview.elevation_gain_m + ' m'"></div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-gray-100" x-text="preview.elevation_gain_m + ' m'"></div>
                             <div class="text-sm text-gray-500">Elevation Gain</div>
                         </div>
                         <div>
-                            <div class="text-2xl font-bold text-gray-900" x-text="formatDuration(preview.estimated_time_min)"></div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-gray-100" x-text="formatDuration(preview.estimated_time_min)"></div>
                             <div class="text-sm text-gray-500">Est. Time</div>
                         </div>
                     </div>
 
                     <!-- Trim Route -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-medium text-gray-900">Trim Route</h4>
+                            <h4 class="font-medium text-gray-900 dark:text-gray-100">Trim Route</h4>
                             <button type="button" @click="resetTrim()" x-cloak x-show="startCrop > 0 || endCrop > 0" class="text-sm text-gray-500 hover:underline">Reset trim</button>
                         </div>
 
-                        <div class="flex items-center justify-between text-sm text-gray-700 mb-2">
+                        <div class="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300 mb-2">
                             <span class="flex items-center gap-1.5">
                                 <span class="h-2.5 w-2.5 rounded-full" style="background:#16a34a"></span>
                                 Start <span class="font-medium" x-text="startCrop + '%'"></span>
@@ -124,30 +124,30 @@
                     </div>
 
                     <!-- Map Preview -->
-                    <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-6"
+                    <div class="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-6"
                          x-data="routePreviewMap"
                          x-effect="geometry = preview ? preview.geometry : null"></div>
 
                     <!-- Features -->
-                    <div class="border-t border-gray-100 pt-6">
-                        <h4 class="font-medium text-gray-900 mb-3">Route Features (optional)</h4>
+                    <div class="border-t border-gray-100 dark:border-gray-800 pt-6">
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">Route Features (optional)</h4>
                         <div class="flex flex-wrap gap-x-4 gap-y-2">
                             @foreach(\App\Models\RouteFeature::FEATURE_TYPES as $type => $label)
                                 <label class="inline-flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" name="features[]" value="{{ $type }}" class="rounded border-gray-300 text-primary focus:ring-primary">
-                                    <span class="text-sm text-gray-700">{{ $label }}</span>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
                                 </label>
                             @endforeach
                             <template x-for="custom in customFeatures" :key="custom">
                                 <label class="inline-flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" name="features[]" :value="'custom:' + custom" checked class="rounded border-gray-300 text-primary focus:ring-primary">
-                                    <span class="text-sm text-gray-700" x-text="custom"></span>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300" x-text="custom"></span>
                                 </label>
                             </template>
                         </div>
                         <div class="mt-3 flex gap-2">
                             <input type="text" x-model="customFeature" @keydown.enter.prevent="addCustomFeature()" placeholder="Custom feature..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <button type="button" @click="addCustomFeature()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Add</button>
+                            <button type="button" @click="addCustomFeature()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:bg-gray-900">Add</button>
                         </div>
                     </div>
 
@@ -158,7 +158,7 @@
             <!-- Submit -->
             <template x-if="preview">
                 <div class="flex justify-end gap-4">
-                    <a href="{{ route('routes.index') }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">Cancel</a>
+                    <a href="{{ route('routes.index') }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Cancel</a>
                     <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors">Create Route</button>
                 </div>
             </template>

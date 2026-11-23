@@ -6,6 +6,9 @@
     * {
         @apply border-gray-200;
     }
+    .dark input, .dark textarea, .dark select {
+        @apply bg-gray-800 text-gray-100 border-gray-700;
+    }
     body {
         @apply font-sans antialiased;
     }
@@ -40,7 +43,7 @@
 
 /* Route card */
 .route-card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden transition-shadow hover:shadow-md;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-shadow hover:shadow-md;
 }
 
 .route-card:hover {
@@ -98,7 +101,7 @@
 
 /* Notification dropdown */
 .notification-dropdown {
-    @apply absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-[1000];
+    @apply absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-[1000];
 }
 
 /* Trim slider */

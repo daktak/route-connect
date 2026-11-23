@@ -1,8 +1,8 @@
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md transition-shadow">
     <div class="p-6">
         <div class="flex items-start justify-between gap-4 mb-4">
             <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-900 truncate">{{ $ride->title ?? $ride->route->name }}</h3>
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $ride->title ?? $ride->route->name }}</h3>
                 <p class="text-sm text-gray-500 mt-1">
                     {{ $ride->route->name }}
                     @if(($ride->route_options_count ?? 0) > 1)
@@ -13,7 +13,7 @@
             <span class="ride-status {{ $ride->status }} flex-shrink-0">{{ ucfirst($ride->status) }}</span>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span>{{ $ride->ride_date->timezone($ride->timezoneName())->format('l, M j, Y') }}</span>
@@ -33,7 +33,7 @@
         </div>
 
         @if($ride->meeting_point_name)
-            <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
                 <span>{{ $ride->meeting_point_name }}</span>
             </div>
@@ -70,7 +70,7 @@
         @endif
 
         @if($ride->description)
-            <p class="text-sm text-gray-600 mb-4 line-clamp-2 whitespace-pre-line">{{ $ride->description }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 whitespace-pre-line">{{ $ride->description }}</p>
         @endif
 
         @if($ride->weather)
@@ -82,7 +82,7 @@
             ])
         @endif
 
-        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
             <div class="flex items-center gap-4">
                 <div class="flex -space-x-2">
                     @foreach($ride->attendees->take(5) as $attendee)
@@ -91,12 +91,12 @@
                         </div>
                     @endforeach
                     @if($ride->attendees->count() > 5)
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 border-2 border-white">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-400 border-2 border-white">
                             +{{ $ride->attendees->count() - 5 }}
                         </div>
                     @endif
                 </div>
-                <span class="text-sm text-gray-600">{{ $ride->attendees_count }} / {{ $ride->max_participants ?? '∞' }}</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $ride->attendees_count }} / {{ $ride->max_participants ?? '∞' }}</span>
             </div>
 
             <div class="flex items-center gap-2">

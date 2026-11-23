@@ -3,9 +3,22 @@
 namespace App\Services\Concerns;
 
 use App\Models\GroupRide;
+use Illuminate\Support\Facades\Cache;
 
 trait HandlesOpenMeteoData
 {
+    private const FAILURE_CACHE_VALUE = '__open_meteo_failure__';
+
+    private function isFailureCached(string $key): bool
+    {
+        return Cache::get($key) === self::FAILURE_CACHE_VALUE;
+    }
+
+    private function cacheFailure(string $key): void
+    {
+        Cache::put($key, self::FAILURE_CACHE_VALUE, now()->addSeconds(config('services.open_meteo.failure_cache_ttl', 60)));
+    }
+
     /**
      * @return array{lat: float, lng: float}|null
      */

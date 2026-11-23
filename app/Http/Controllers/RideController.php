@@ -175,7 +175,10 @@ class RideController extends Controller
             ? app(AirQualityService::class)->forRide($ride)
             : null;
 
-        return view('rides.show', compact('ride'));
+        return view('rides.show', [
+            'ride' => $ride,
+            'multipleRoutes' => $ride->routeOptions->count() > 1,
+        ]);
     }
 
     public function edit(GroupRide $ride)

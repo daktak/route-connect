@@ -8,6 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 class SendMatrixMessage implements ShouldQueue
 {
@@ -15,10 +17,19 @@ class SendMatrixMessage implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public string $content) {}
+    public int $backoff = 5;
+
+    public string $txnId;
+
+    public function __construct(public string $content, ?string $txnId = null)
+    {
+        $this->txnId = $txnId ?: (string) Str::uuid();
+    }
 
     public function handle(MatrixService $matrix): void
     {
-        $matrix->post($this->content);
+        if (! $matrix->post($this->content, $this->txnId)) {
+            throw new RuntimeException('Failed to post Matrix message');
+        }
     }
 }

@@ -1,5 +1,12 @@
 <?php
 
+$matrixHomeserver = trim((string) env('MATRIX_HOMESERVER_URL', ''));
+$matrixHomeserver = preg_replace('#^//+#', '', $matrixHomeserver);
+if ($matrixHomeserver !== '' && ! preg_match('#^https?://#i', $matrixHomeserver)) {
+    $matrixHomeserver = 'https://'.$matrixHomeserver;
+}
+$matrixHomeserver = rtrim($matrixHomeserver, '/');
+
 return [
 
     /*
@@ -42,6 +49,9 @@ return [
         'air_quality_url' => env('OPEN_METEO_AIR_QUALITY_URL', 'https://air-quality-api.open-meteo.com/v1/air-quality'),
         'air_quality_cache_ttl' => (int) env('AIR_QUALITY_CACHE_TTL', 1800),
         'air_quality_forecast_days' => (int) env('AIR_QUALITY_FORECAST_DAYS', 5),
+        'timeout' => (int) env('OPEN_METEO_TIMEOUT', 5),
+        'retry_attempts' => (int) env('OPEN_METEO_RETRIES', 1),
+        'failure_cache_ttl' => (int) env('OPEN_METEO_FAILURE_CACHE_TTL', 60),
     ],
 
     'valhalla' => [
@@ -56,12 +66,14 @@ return [
     ],
 
     'matrix' => [
-        'homeserver_url' => env('MATRIX_HOMESERVER_URL'),
+        'homeserver_url' => $matrixHomeserver,
         'username' => env('MATRIX_USERNAME'),
         'password' => env('MATRIX_PASSWORD'),
         'room_ids' => array_filter(array_map('trim', explode(',', (string) env('MATRIX_ROOM_IDS', '')))),
         'invite_url' => env('MATRIX_INVITE_URL'),
         'timeout' => (int) env('MATRIX_TIMEOUT', 5),
+        'retry_attempts' => (int) env('MATRIX_RETRY_ATTEMPTS', 2),
+        'max_retry_delay_ms' => (int) env('MATRIX_MAX_RETRY_DELAY_MS', 30000),
     ],
 
 ];

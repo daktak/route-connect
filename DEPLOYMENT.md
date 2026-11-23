@@ -85,6 +85,9 @@ WEATHER_FORECAST_DAYS=16
 OPEN_METEO_AIR_QUALITY_URL=https://air-quality-api.open-meteo.com/v1/air-quality
 AIR_QUALITY_CACHE_TTL=1800
 AIR_QUALITY_FORECAST_DAYS=5
+OPEN_METEO_TIMEOUT=5
+OPEN_METEO_RETRIES=1
+OPEN_METEO_FAILURE_CACHE_TTL=60
 VALHALLA_BASE_URL=https://valhalla1.openstreetmap.de
 VALHALLA_TIMEOUT=30
 
@@ -97,6 +100,7 @@ DISCORD_TIMEOUT=5
 # Matrix notifications (bot account posting to one or more rooms; empty disables)
 # MATRIX_USERNAME may be a full user ID (@bot:matrix.org) or just the localpart.
 # MATRIX_ROOM_IDS is comma-separated; the bot must already have joined each room.
+# MATRIX_HOMESERVER_URL accepts a bare hostname (normalised to https://) or a full URL.
 MATRIX_HOMESERVER_URL=
 MATRIX_USERNAME=
 MATRIX_PASSWORD=
@@ -104,6 +108,8 @@ MATRIX_ROOM_IDS=
 # Public invite link shown in the notification dropdown; empty hides the link
 MATRIX_INVITE_URL=
 MATRIX_TIMEOUT=5
+MATRIX_RETRY_ATTEMPTS=2
+MATRIX_MAX_RETRY_DELAY_MS=30000
 
 # Hours before a ride starts that confirmed attendees are reminded
 RIDE_REMINDER_HOURS=24

@@ -64,9 +64,6 @@
                             </dd>
                         </div>
                         <div>
-                            @php
-                                $multipleRoutes = $ride->routeOptions->count() > 1;
-                            @endphp
                             <dt class="text-sm text-gray-500">{{ $multipleRoutes ? 'Routes' : 'Route' }}</dt>
                             <dd class="font-medium text-gray-900">
                                 <ul class="space-y-1">

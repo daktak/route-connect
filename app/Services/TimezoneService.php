@@ -38,9 +38,19 @@ class TimezoneService
 
         $key = 'tz:'.$lat.':'.$lng;
 
-        return Cache::remember($key, now()->addMonth(), function () use ($lat, $lng) {
-            try {
-                $response = Http::timeout(5)->retry(1, 200)->get(
+        if ($this->isFailureCached($key)) {
+            return null;
+        }
+
+        $cached = Cache::get($key);
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        try {
+            $response = Http::timeout((int) config('services.open_meteo.timeout', 5))
+                ->retry((int) config('services.open_meteo.retry_attempts', 1), 200)
+                ->get(
                     config('services.open_meteo.base_url'),
                     [
                         'latitude' => $lat,
@@ -50,25 +60,30 @@ class TimezoneService
                         'forecast_days' => 1,
                     ]
                 );
-            } catch (\Throwable $e) {
-                Log::warning('Open-Meteo timezone lookup failed', ['message' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::warning('Open-Meteo timezone lookup failed', ['message' => $e->getMessage()]);
+            $this->cacheFailure($key);
 
-                return null;
-            }
+            return null;
+        }
 
-            if (! $response->successful()) {
-                Log::warning('Open-Meteo timezone lookup returned an error', ['status' => $response->status()]);
+        if (! $response->successful()) {
+            Log::warning('Open-Meteo timezone lookup returned an error', ['status' => $response->status()]);
+            $this->cacheFailure($key);
 
-                return null;
-            }
+            return null;
+        }
 
-            $timezone = $response->json('timezone');
+        $timezone = $response->json('timezone');
 
-            if (! is_string($timezone) || ! in_array($timezone, DateTimeZone::listIdentifiers(), true)) {
-                return null;
-            }
+        if (! is_string($timezone) || ! in_array($timezone, DateTimeZone::listIdentifiers(), true)) {
+            $this->cacheFailure($key);
 
-            return $timezone;
-        });
+            return null;
+        }
+
+        Cache::put($key, $timezone, now()->addMonth());
+
+        return $timezone;
     }
 }

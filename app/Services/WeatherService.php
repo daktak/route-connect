@@ -95,6 +95,10 @@ class WeatherService
         $misses = [];
 
         foreach ($locations as $key => $coords) {
+            if ($this->isFailureCached($key)) {
+                continue;
+            }
+
             $cached = Cache::get($key);
             if ($cached !== null) {
                 $result[$key] = $cached;
@@ -115,26 +119,34 @@ class WeatherService
         }
 
         try {
-            $response = Http::timeout(5)->retry(1, 200)->get(
-                config('services.open_meteo.base_url'),
-                [
-                    'latitude' => implode(',', $lats),
-                    'longitude' => implode(',', $lngs),
-                    'hourly' => implode(',', self::HOURLY),
-                    'daily' => implode(',', self::DAILY),
-                    'timezone' => 'auto',
-                    'timeformat' => 'unixtime',
-                    'forecast_days' => config('services.open_meteo.forecast_days', 16),
-                ]
-            );
+            $response = Http::timeout((int) config('services.open_meteo.timeout', 5))
+                ->retry((int) config('services.open_meteo.retry_attempts', 1), 200)
+                ->get(
+                    config('services.open_meteo.base_url'),
+                    [
+                        'latitude' => implode(',', $lats),
+                        'longitude' => implode(',', $lngs),
+                        'hourly' => implode(',', self::HOURLY),
+                        'daily' => implode(',', self::DAILY),
+                        'timezone' => 'auto',
+                        'timeformat' => 'unixtime',
+                        'forecast_days' => config('services.open_meteo.forecast_days', 16),
+                    ]
+                );
         } catch (\Throwable $e) {
             Log::warning('Open-Meteo request failed', ['message' => $e->getMessage()]);
+            foreach (array_keys($misses) as $key) {
+                $this->cacheFailure($key);
+            }
 
             return $result;
         }
 
         if (! $response->successful()) {
             Log::warning('Open-Meteo returned an error', ['status' => $response->status()]);
+            foreach (array_keys($misses) as $key) {
+                $this->cacheFailure($key);
+            }
 
             return $result;
         }
@@ -148,6 +160,8 @@ class WeatherService
             $index++;
 
             if (! is_array($entry) || empty($entry['hourly']['time'])) {
+                $this->cacheFailure($key);
+
                 continue;
             }
 

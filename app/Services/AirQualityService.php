@@ -87,6 +87,10 @@ class AirQualityService
         $misses = [];
 
         foreach ($locations as $key => $coords) {
+            if ($this->isFailureCached($key)) {
+                continue;
+            }
+
             $cached = Cache::get($key);
             if ($cached !== null) {
                 $result[$key] = $cached;
@@ -107,25 +111,33 @@ class AirQualityService
         }
 
         try {
-            $response = Http::timeout(5)->retry(1, 200)->get(
-                config('services.open_meteo.air_quality_url'),
-                [
-                    'latitude' => implode(',', $lats),
-                    'longitude' => implode(',', $lngs),
-                    'hourly' => implode(',', self::HOURLY),
-                    'timezone' => 'auto',
-                    'timeformat' => 'unixtime',
-                    'forecast_days' => min(7, (int) config('services.open_meteo.air_quality_forecast_days', 5)),
-                ]
-            );
+            $response = Http::timeout((int) config('services.open_meteo.timeout', 5))
+                ->retry((int) config('services.open_meteo.retry_attempts', 1), 200)
+                ->get(
+                    config('services.open_meteo.air_quality_url'),
+                    [
+                        'latitude' => implode(',', $lats),
+                        'longitude' => implode(',', $lngs),
+                        'hourly' => implode(',', self::HOURLY),
+                        'timezone' => 'auto',
+                        'timeformat' => 'unixtime',
+                        'forecast_days' => min(7, (int) config('services.open_meteo.air_quality_forecast_days', 5)),
+                    ]
+                );
         } catch (\Throwable $e) {
             Log::warning('Open-Meteo air quality request failed', ['message' => $e->getMessage()]);
+            foreach (array_keys($misses) as $key) {
+                $this->cacheFailure($key);
+            }
 
             return $result;
         }
 
         if (! $response->successful()) {
             Log::warning('Open-Meteo air quality returned an error', ['status' => $response->status()]);
+            foreach (array_keys($misses) as $key) {
+                $this->cacheFailure($key);
+            }
 
             return $result;
         }
@@ -139,6 +151,8 @@ class AirQualityService
             $index++;
 
             if (! is_array($entry) || empty($entry['hourly']['time'])) {
+                $this->cacheFailure($key);
+
                 continue;
             }
 

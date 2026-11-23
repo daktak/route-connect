@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use RuntimeException;
 
 class SendDiscordMessage implements ShouldQueue
 {
@@ -24,6 +25,8 @@ class SendDiscordMessage implements ShouldQueue
 
     public function handle(DiscordService $discord): void
     {
-        $discord->post($this->content);
+        if (! $discord->post($this->content)) {
+            throw new RuntimeException('Failed to post Discord message');
+        }
     }
 }

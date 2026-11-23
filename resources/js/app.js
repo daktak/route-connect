@@ -931,6 +931,7 @@ Alpine.data('routePreviewMap', () => ({
     geometry: null,
     hasFitInitial: false,
     userInteracted: false,
+    onNewFile: null,
 
     init() {
         this.map = L.map(this.$el, {
@@ -945,11 +946,12 @@ Alpine.data('routePreviewMap', () => ({
 
         this.layer = L.featureGroup().addTo(this.map);
         this.map.on('zoomstart movestart dragstart', () => { this.userInteracted = true; });
-        document.addEventListener('gpx-new-file', () => {
+        this.onNewFile = () => {
             this.userInteracted = false;
             this.hasFitInitial = false;
             this.render();
-        });
+        };
+        document.addEventListener('gpx-new-file', this.onNewFile);
         this.$watch('geometry', () => this.render());
 
         if (typeof ResizeObserver !== 'undefined') {
@@ -997,6 +999,12 @@ Alpine.data('routePreviewMap', () => ({
         } else {
             this.map.invalidateSize();
         }
+    },
+
+    destroy() {
+        document.removeEventListener('gpx-new-file', this.onNewFile);
+        this.resizeObserver?.disconnect();
+        this.map?.remove();
     },
 
     queueFit() {
@@ -1371,10 +1379,17 @@ Alpine.data('gpxUpload', () => ({
     fullPoints: [],
     fullGeometry: null,
 
-    async handleFile(event) {
+    handleFile(event) {
         const file = event.target.files[0];
-        if (!file) return;
+        if (file) this.parseFile(file);
+    },
 
+    handleDrop(event) {
+        const file = event.dataTransfer?.files?.[0];
+        if (file) this.parseFile(file);
+    },
+
+    async parseFile(file) {
         if (!file.name.endsWith('.gpx')) {
             this.error = 'Please select a GPX file';
             return;
@@ -1408,8 +1423,10 @@ Alpine.data('gpxUpload', () => ({
                 this.startCrop = 0;
                 this.endCrop = 0;
                 this.recompute();
-                this.$dispatch('gpx-parsed', { preview: this.preview });
-                document.dispatchEvent(new CustomEvent('gpx-new-file'));
+                this.$nextTick(() => {
+                    this.$dispatch('gpx-parsed', { preview: this.preview });
+                    document.dispatchEvent(new CustomEvent('gpx-new-file'));
+                });
             } else {
                 const error = await response.json();
                 this.error = error.message || 'Failed to parse GPX';

@@ -359,4 +359,14 @@ class DiscordIntegrationTest extends TestCase
 
         Http::assertSent(fn ($request) => $request['content'] === 'from the job');
     }
+
+    public function test_send_discord_message_job_fails_when_the_webhook_rejects(): void
+    {
+        config(['services.discord.webhook_url' => 'https://discord.example/webhook']);
+        Http::fake(['*' => Http::response('bad request', 400)]);
+
+        $this->expectException(\RuntimeException::class);
+
+        (new SendDiscordMessage('from the job'))->handle(app(DiscordService::class));
+    }
 }

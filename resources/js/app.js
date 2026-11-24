@@ -377,8 +377,48 @@ Alpine.data('elevationChart', (config = {}) => ({
 
         const profile = this.profile;
 
+        const colorForGrade = (g) => {
+            if (g <= 0) return 'rgba(59, 130, 246, 0.18)';
+            if (g < 4) return 'rgba(34, 197, 94, 0.25)';
+            if (g < 8) return 'rgba(234, 179, 8, 0.32)';
+            return 'rgba(239, 68, 68, 0.38)';
+        };
+
+        const gradeAt = (i) => {
+            if (i >= profile.length - 1) return 0;
+            const dElev = profile[i + 1].elevation - profile[i].elevation;
+            const dDistM = (profile[i + 1].distance_km - profile[i].distance_km) * 1000;
+            if (dDistM <= 0) return 0;
+            return (dElev / dDistM) * 100;
+        };
+
+        const shadePlugin = {
+            id: 'gradientShade',
+            beforeDraw(chart) {
+                const { ctx: c, chartArea } = chart;
+                const meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data || meta.data.length < 2) return;
+                c.save();
+                for (let i = 0; i < profile.length - 1; i++) {
+                    const p0 = meta.data[i];
+                    const p1 = meta.data[i + 1];
+                    if (!p0 || !p1) continue;
+                    c.beginPath();
+                    c.moveTo(p0.x, p0.y);
+                    c.lineTo(p1.x, p1.y);
+                    c.lineTo(p1.x, chartArea.bottom);
+                    c.lineTo(p0.x, chartArea.bottom);
+                    c.closePath();
+                    c.fillStyle = colorForGrade(gradeAt(i));
+                    c.fill();
+                }
+                c.restore();
+            },
+        };
+
         this.chart = new Chart(ctx, {
             type: 'line',
+            plugins: [shadePlugin],
             data: {
                 labels: profile.map(d => d.distance_km),
                 datasets: [{
@@ -386,7 +426,7 @@ Alpine.data('elevationChart', (config = {}) => ({
                     data: profile.map(d => d.elevation),
                     borderColor: '#2563eb',
                     backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    fill: true,
+                    fill: false,
                     tension: 0.3,
                     pointRadius: 0,
                     borderWidth: 2,

@@ -29,6 +29,7 @@ class Route extends Model
     protected $casts = [
         'gpx_data' => 'array',
         'surface_breakdown' => 'array',
+        'surface_profile' => 'array',
         'distance_km' => 'decimal:2',
         'elevation_gain_m' => 'integer',
         'estimated_time_min' => 'integer',

@@ -54,6 +54,7 @@ class SurfaceAnalyzer
             'gravel_pct' => $result['gravel_pct'],
             'surface_analyzed_at' => now(),
             'surface_source' => $result['source'],
+            'surface_profile' => $result['surface_profile'] ?? null,
         ])->save();
 
         return true;
@@ -111,6 +112,8 @@ class SurfaceAnalyzer
         }
 
         $lengths = ['paved' => 0.0, 'gravel' => 0.0, 'unknown' => 0.0];
+        $surfaceProfile = [];
+        $cumulative = 0.0;
 
         foreach ($edges as $edge) {
             $length = (float) ($edge['length'] ?? 0);
@@ -119,7 +122,13 @@ class SurfaceAnalyzer
                 continue;
             }
 
-            $lengths[$this->classifySurface($edge['surface'] ?? null)] += $length;
+            $category = $this->classifySurface($edge['surface'] ?? null);
+            $lengths[$category] += $length;
+            $cumulative += $length;
+            $surfaceProfile[] = [
+                'distance_km' => round($cumulative, 3),
+                'surface' => $category,
+            ];
         }
 
         $total = array_sum($lengths);
@@ -137,6 +146,7 @@ class SurfaceAnalyzer
             'breakdown' => $breakdown,
             'gravel_pct' => $breakdown['gravel'],
             'source' => 'valhalla',
+            'surface_profile' => $surfaceProfile,
         ];
     }
 

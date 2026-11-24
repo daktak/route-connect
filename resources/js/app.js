@@ -469,7 +469,9 @@ Alpine.data('elevationChart', (config = {}) => ({
                                     }
                                 }
                                 const gradStr = grad >= 0 ? '+' + grad.toFixed(1) + '%' : grad.toFixed(1) + '%';
-                                return 'Elevation: ' + Math.round(ctx.raw) + 'm | Grade: ' + gradStr;
+                                const surf = profile[idx]?.surface;
+                                const surfStr = surf ? ' | Surface: ' + surf.charAt(0).toUpperCase() + surf.slice(1) : '';
+                                return 'Elevation: ' + Math.round(ctx.raw) + 'm | Grade: ' + gradStr + surfStr;
                             },
                             title: ctx => 'Distance: ' + ctx[0].label + ' km',
                         },

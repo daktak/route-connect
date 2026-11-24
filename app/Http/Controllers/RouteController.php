@@ -283,7 +283,7 @@ class RouteController extends Controller
         ]);
 
         // Generate elevation profile data
-        $elevationProfile = $this->generateElevationProfile($route->gpx_data);
+        $elevationProfile = $this->generateElevationProfile($route->gpx_data, $route->surface_profile ?? []);
 
         $featuresData = $route->features->map(fn ($f) => [
             'id' => $f->id,
@@ -398,7 +398,7 @@ class RouteController extends Controller
         }
     }
 
-    private function generateElevationProfile(array $gpxData): array
+    private function generateElevationProfile(array $gpxData, array $surfaceProfile = []): array
     {
         $segments = $gpxData['tracks'][0]['segments'] ?? [];
         $profile = [];
@@ -430,6 +430,16 @@ class RouteController extends Controller
                 );
             }
             $point['distance_km'] = round($totalDistance, 2);
+
+            $surface = 'unknown';
+            foreach ($surfaceProfile as $entry) {
+                if (($entry['distance_km'] ?? 0) <= $point['distance_km'] + 0.0001) {
+                    $surface = $entry['surface'] ?? 'unknown';
+                } else {
+                    break;
+                }
+            }
+            $point['surface'] = $surface;
         }
 
         return array_values($profile);

@@ -18,13 +18,20 @@ class SendDiscordMessage implements ShouldQueue
 
     public int $backoff = 5;
 
+    public ?bool $enabled = null;
+
     public function __construct(public string $content)
     {
+        $this->enabled = (string) config('services.discord.webhook_url') !== '';
         $this->afterCommit();
     }
 
     public function handle(DiscordService $discord): void
     {
+        if ($this->enabled === false || (string) config('services.discord.webhook_url') === '') {
+            return;
+        }
+
         if (! $discord->post($this->content)) {
             throw new RuntimeException('Failed to post Discord message');
         }

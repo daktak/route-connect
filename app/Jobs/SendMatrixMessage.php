@@ -21,13 +21,31 @@ class SendMatrixMessage implements ShouldQueue
 
     public string $txnId;
 
+    public ?bool $enabled = null;
+
     public function __construct(public string $content, ?string $txnId = null)
     {
         $this->txnId = $txnId ?: (string) Str::uuid();
+
+        $homeserver = trim((string) config('services.matrix.homeserver_url'));
+        $username = (string) config('services.matrix.username');
+        $password = (string) config('services.matrix.password');
+        $roomIds = (array) config('services.matrix.room_ids', []);
+
+        $this->enabled = $homeserver !== '' && $username !== '' && $password !== '' && $roomIds !== [];
     }
 
     public function handle(MatrixService $matrix): void
     {
+        $homeserver = trim((string) config('services.matrix.homeserver_url'));
+        $username = (string) config('services.matrix.username');
+        $password = (string) config('services.matrix.password');
+        $roomIds = (array) config('services.matrix.room_ids', []);
+
+        if ($this->enabled === false || $homeserver === '' || $username === '' || $password === '' || $roomIds === []) {
+            return;
+        }
+
         if (! $matrix->post($this->content, $this->txnId)) {
             throw new RuntimeException('Failed to post Matrix message');
         }

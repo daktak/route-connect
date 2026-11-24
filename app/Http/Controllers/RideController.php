@@ -53,7 +53,7 @@ class RideController extends Controller
             $query->where('ride_date', '<=', $to);
         }
 
-        $rides = $query->paginate(15)->withQueryString();
+        $rides = $query->paginate(14)->withQueryString();
 
         $rides->getCollection()->each(function ($ride) {
             $ride->weather = null;

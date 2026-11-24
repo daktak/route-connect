@@ -78,7 +78,7 @@ class RouteController extends Controller
             default => $query->latest(),
         };
 
-        $routes = $query->paginate(15)->withQueryString();
+        $routes = $query->paginate(14)->withQueryString();
 
         return view('routes.index', compact('routes'));
     }

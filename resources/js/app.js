@@ -399,6 +399,15 @@ Alpine.data('elevationChart', (config = {}) => ({
                     intersect: false,
                     mode: 'index',
                 },
+                onHover: (event, activeElements) => {
+                    if (activeElements && activeElements.length) {
+                        const idx = activeElements[0].index;
+                        const p = profile[idx];
+                        if (p) Alpine.store('routeHover').set(p.lat, p.lng);
+                    } else {
+                        Alpine.store('routeHover').clear();
+                    }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -420,7 +429,7 @@ Alpine.data('elevationChart', (config = {}) => ({
                                     }
                                 }
                                 const gradStr = grad >= 0 ? '+' + grad.toFixed(1) + '%' : grad.toFixed(1) + '%';
-                                return 'Elevation: ' + ctx.raw + 'm | Grade: ' + gradStr;
+                                return 'Elevation: ' + Math.round(ctx.raw) + 'm | Grade: ' + gradStr;
                             },
                             title: ctx => 'Distance: ' + ctx[0].label + ' km',
                         },
@@ -1031,6 +1040,7 @@ Alpine.data('singleRouteMap', (config = {}) => ({
     map: null,
     routeLayer: null,
     featuresLayer: null,
+    hoverMarker: null,
     geometry: config.geometry ?? null,
     difficulty: config.difficulty ?? 'moderate',
     features: config.features ?? [],
@@ -1052,6 +1062,7 @@ Alpine.data('singleRouteMap', (config = {}) => ({
 
         this.$watch('geometry', () => this.renderRoute());
         this.$watch('features', () => this.renderFeatures());
+        this.$watch(() => Alpine.store('routeHover').lat, () => this.updateHoverMarker());
         this.renderRoute();
         this.renderFeatures();
 
@@ -1101,6 +1112,27 @@ Alpine.data('singleRouteMap', (config = {}) => ({
         this.features.forEach((feature) => this.addFeatureMarker(feature));
     },
 
+    updateHoverMarker() {
+        const store = Alpine.store('routeHover');
+        if (store.lat == null || store.lng == null) {
+            if (this.hoverMarker) {
+                this.map.removeLayer(this.hoverMarker);
+                this.hoverMarker = null;
+            }
+            return;
+        }
+        if (!this.hoverMarker) {
+            this.hoverMarker = L.circleMarker([store.lat, store.lng], {
+                radius: 7,
+                color: '#dc2626',
+                fillColor: '#dc2626',
+                fillOpacity: 0.9,
+                weight: 2,
+            }).addTo(this.map);
+        } else {
+            this.hoverMarker.setLatLng([store.lat, store.lng]);
+        }
+    },
     getDifficultyColor(difficulty) {
         const colors = {
             easy: '#16a34a',
@@ -1633,6 +1665,13 @@ Alpine.store('theme').init();
 Alpine.store('theme').apply();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (Alpine.store('theme').mode === 'system') Alpine.store('theme').apply();
+});
+
+Alpine.store('routeHover', {
+    lat: null,
+    lng: null,
+    set(lat, lng) { this.lat = lat; this.lng = lng; },
+    clear() { this.lat = null; this.lng = null; },
 });
 
 Alpine.start();

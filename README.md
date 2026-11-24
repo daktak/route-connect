@@ -302,6 +302,9 @@ controller — **not** database columns.
 | `OPEN_METEO_AIR_QUALITY_URL` | Air quality API base | Open-Meteo air-quality URL |
 | `AIR_QUALITY_CACHE_TTL` / `AIR_QUALITY_FORECAST_DAYS` | Air quality caching/window | `1800` / `5` |
 | `VALHALLA_BASE_URL` / `VALHALLA_TIMEOUT` | Surface analysis API | `https://valhalla1.openstreetmap.de` / `30` |
+| `GOOGLE_CLIENT_ID` / `_SECRET` / `_REDIRECT_URI` | Google OAuth login (optional) | empty |
+| `GITHUB_CLIENT_ID` / `_SECRET` / `_REDIRECT_URI` | GitHub OAuth login (optional) | empty |
+| `STRAVA_CLIENT_ID` / `_SECRET` / `_REDIRECT_URI` | Strava OAuth login (optional) | empty |
 
 ## License
 

@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'emergency_contact_name', 'emergency_contact_phone', 'email_notifications', 'telegram_chat_id', 'route_filters', 'route_view_mode', 'theme'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'emergency_contact_name', 'emergency_contact_phone', 'email_notifications', 'telegram_chat_id', 'route_filters', 'route_view_mode', 'theme', 'oauth_provider', 'oauth_id', 'avatar_url'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {

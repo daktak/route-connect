@@ -44,4 +44,26 @@
             </x-primary-button>
         </div>
     </form>
+
+@php
+    $oauthProviders = collect(['google' => 'Google', 'github' => 'GitHub', 'strava' => 'Strava'])
+        ->filter(fn ($label, $p) => config("services.$p.client_id") && config("services.$p.client_secret"));
+@endphp
+@if ($oauthProviders->isNotEmpty())
+    <div class="mt-6">
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-300 dark:border-gray-700"></span></div>
+            <div class="relative flex justify-center text-sm"><span class="bg-white dark:bg-gray-800 px-2 text-gray-500">Or continue with</span></div>
+        </div>
+        <div class="mt-4 flex flex-col gap-2">
+            @foreach ($oauthProviders as $provider => $label)
+                @if (config("services.$provider.client_id"))
+                    <a href="{{ route('oauth.redirect', $provider) }}" class="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        {{ $label }}
+                    </a>
+                @endif
+            @endforeach
+        </div>
+    </div>
+@endif
 </x-guest-layout>

@@ -131,6 +131,51 @@
                 </div>
             </div>
 
+            <!-- Recurrence -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6" x-data="{ freq: '{{ old('recurrence.freq','') }}', mode: '{{ old('recurrence.until') ? 'until' : (old('recurrence.count') ? 'count' : 'until') }}' }">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Repeat (optional)</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency</label>
+                        <select name="recurrence[freq]" x-model="freq" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            <option value="">Does not repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="fortnightly">Fortnightly</option>
+                            <option value="monthly">Monthly (Nth weekday)</option>
+                        </select>
+                    </div>
+                    <div x-show="freq === 'monthly'" x-cloak class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weekday</label>
+                            <select name="recurrence[by_weekday]" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                @foreach(['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as $i => $d)
+                                    <option value="{{ $i }}">{{ $d }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Which occurrence</label>
+                            <select name="recurrence[by_week]" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                @foreach([1=>'1st',2=>'2nd',3=>'3rd',4=>'4th',5=>'5th'] as $v=>$l)
+                                    <option value="{{ $v }}">{{ $l }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div x-show="freq" x-cloak>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End</label>
+                        <div class="flex gap-4 items-center">
+                            <label><input type="radio" name="recurrence_end_mode" value="until" x-model="mode"> Until date</label>
+                            <label><input type="radio" name="recurrence_end_mode" value="count" x-model="mode"> Number of rides</label>
+                        </div>
+                        <input type="date" name="recurrence[until]" x-show="mode==='until'" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <p class="mt-1 text-xs text-gray-400">End date must be within 3 months of the first ride.</p>
+                        <input type="number" name="recurrence[count]" min="2" max="52" x-show="mode==='count'" class="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+            </div>
+
             <!-- Submit -->
             <div class="flex justify-end gap-4">
                 <a href="{{ route('rides.index') }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Cancel</a>

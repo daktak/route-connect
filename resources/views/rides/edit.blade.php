@@ -14,7 +14,7 @@
             Changing the route or date will require all attendees to confirm their attendance again.
         </div>
 
-        <form method="POST" action="{{ route('rides.update', $ride) }}" class="space-y-8">
+        <form id="ride-edit-form" method="POST" action="{{ route('rides.update', $ride) }}" class="space-y-8">
             @csrf
             @method('PUT')
 
@@ -143,9 +143,17 @@
                 </div>
             </div>
 
+            @if($ride->recurrence_series_id || $ride->recurrence_rule)
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Edit scope</h3>
+                <label class="block"><input type="radio" name="edit_scope" value="single" checked> This ride only</label>
+                <label class="block"><input type="radio" name="edit_scope" value="series"> This and following rides</label>
+            </div>
+            @endif
+
             <!-- Submit -->
             <div class="flex justify-between gap-4">
-                <button type="submit" form="delete-ride-form" class="px-6 py-3 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors" onclick="return confirm('Cancel this ride? This cannot be undone.');">Cancel Ride</button>
+                <button type="button" class="px-6 py-3 border border-red-300 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors" onclick="if(!confirm('Cancel this ride? This cannot be undone.')) return; const s=document.querySelector('select[name=status]'); if(s) s.value='cancelled'; document.getElementById('ride-edit-form').submit();">Cancel Ride</button>
                 <div class="flex gap-4">
                     <a href="{{ route('rides.show', $ride) }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:bg-gray-900 transition-colors">Cancel</a>
                     <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors">Save Changes</button>

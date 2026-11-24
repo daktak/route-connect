@@ -10,6 +10,7 @@ use App\Models\GroupRideRouteOption;
 use App\Models\RideAttendee;
 use App\Models\Route;
 use App\Services\AirQualityService;
+use App\Services\RecurrenceService;
 use App\Services\TimezoneService;
 use App\Services\WeatherService;
 use Illuminate\Http\Request;
@@ -114,13 +115,31 @@ class RideController extends Controller
             'meeting_point_lng' => 'nullable|numeric|between:-180,180',
             'max_participants' => 'nullable|integer|min:2',
             'description' => 'nullable|string',
+            'recurrence' => 'nullable|array',
+            'recurrence.freq' => 'nullable|in:daily,weekly,fortnightly,monthly',
+            'recurrence.until' => 'nullable|date|after:ride_date|before:+3 months',
+            'recurrence.count' => 'nullable|integer|min:2|max:52',
+            'recurrence.by_weekday' => 'nullable|integer|between:0,6',
+            'recurrence.by_week' => 'nullable|integer|between:1,5',
         ]);
 
         $routeIds = array_values(array_unique(array_map('intval', $request->route_ids)));
 
         $rideDateTime = $this->rideDateTime($request, $routeIds);
 
-        $ride = GroupRide::create([
+        $recurrenceRule = null;
+        if ($request->filled('recurrence.freq')) {
+            $recurrenceRule = array_filter([
+                'freq' => $request->input('recurrence.freq'),
+                'interval' => 1,
+                'until' => $request->input('recurrence.until'),
+                'count' => $request->input('recurrence.count'),
+                'by_weekday' => $request->input('recurrence.by_weekday', $rideDateTime['ride_date']->dayOfWeek),
+                'by_week' => $request->input('recurrence.by_week'),
+            ], fn ($v) => $v !== null && $v !== '');
+        }
+
+        $root = GroupRide::create([
             'route_id' => $routeIds[0],
             'organizer_id' => Auth::id(),
             'title' => $request->title,
@@ -133,27 +152,68 @@ class RideController extends Controller
             'description' => $request->description,
             'status' => 'planned',
             'version' => 1,
+            'recurrence_rule' => $recurrenceRule,
+            'recurrence_index' => 0,
         ]);
 
         foreach ($routeIds as $index => $routeId) {
             GroupRideRouteOption::create([
-                'group_ride_id' => $ride->id,
+                'group_ride_id' => $root->id,
                 'route_id' => $routeId,
                 'sort_order' => $index,
             ]);
         }
 
-        // Organizer auto-joins
         RideAttendee::create([
-            'group_ride_id' => $ride->id,
+            'group_ride_id' => $root->id,
             'user_id' => Auth::id(),
             'ride_version' => 1,
             'status' => 'confirmed',
         ]);
 
-        event(new RideCreated($ride, Auth::user()));
+        event(new RideCreated($root, Auth::user()));
 
-        return redirect()->route('rides.show', $ride)
+        // Generate occurrences
+        if ($recurrenceRule) {
+            $until = $recurrenceRule['until'] ?? null ? Carbon::parse($recurrenceRule['until']) : null;
+            $dates = app(RecurrenceService::class)->occurrences($root->ride_date, $recurrenceRule, $until, $recurrenceRule['count'] ?? null);
+            // skip first (root)
+            $dates->shift();
+            foreach ($dates as $i => $date) {
+                $occ = GroupRide::create([
+                    'route_id' => $routeIds[0],
+                    'organizer_id' => Auth::id(),
+                    'title' => $request->title,
+                    'ride_date' => $date,
+                    'timezone' => $rideDateTime['timezone'],
+                    'meeting_point_name' => $request->meeting_point_name,
+                    'meeting_point_lat' => $request->meeting_point_lat,
+                    'meeting_point_lng' => $request->meeting_point_lng,
+                    'max_participants' => $request->max_participants,
+                    'description' => $request->description,
+                    'status' => 'planned',
+                    'version' => 1,
+                    'recurrence_series_id' => $root->id,
+                    'recurrence_index' => $i + 1,
+                ]);
+                foreach ($routeIds as $index => $routeId) {
+                    GroupRideRouteOption::create([
+                        'group_ride_id' => $occ->id,
+                        'route_id' => $routeId,
+                        'sort_order' => $index,
+                    ]);
+                }
+                RideAttendee::create([
+                    'group_ride_id' => $occ->id,
+                    'user_id' => Auth::id(),
+                    'ride_version' => 1,
+                    'status' => 'confirmed',
+                ]);
+                event(new RideCreated($occ, Auth::user()));
+            }
+        }
+
+        return redirect()->route('rides.show', $root)
             ->with('success', 'Group ride created! You are automatically attending.');
     }
 
@@ -215,6 +275,9 @@ class RideController extends Controller
 
         $rideDateTime = $this->rideDateTime($request, $routeIds);
         $rideDate = $rideDateTime['ride_date'];
+
+        $originalRideDate = $ride->ride_date->copy();
+        $deltaMinutes = $originalRideDate->diffInMinutes($rideDate, false);
 
         $currentRouteIds = $ride->routeOptions()->pluck('route_id')
             ->map(fn ($id) => (int) $id)
@@ -280,6 +343,43 @@ class RideController extends Controller
             ));
         }
 
+        if ($request->input('edit_scope') === 'series') {
+            $root = $ride->seriesRoot ?: $ride;
+
+            if ($request->input('status') === 'cancelled') {
+                GroupRide::where(function ($q) use ($root) {
+                    $q->where('id', $root->id)->orWhere('recurrence_series_id', $root->id);
+                })->where('ride_date', '>', $originalRideDate)->update(['status' => 'cancelled']);
+            } else {
+                $targets = GroupRide::where(function ($q) use ($root) {
+                    $q->where('id', $root->id)->orWhere('recurrence_series_id', $root->id);
+                })->where('ride_date', '>=', $originalRideDate)->get();
+
+                foreach ($targets as $target) {
+                    if ($target->id === $ride->id) {
+                        continue;
+                    }
+                    $newDate = $target->ride_date->copy()->addMinutes($deltaMinutes);
+                    $target->update([
+                        'title' => $request->title,
+                        'ride_date' => $newDate,
+                        'timezone' => $rideDateTime['timezone'],
+                        'meeting_point_name' => $request->meeting_point_name,
+                        'meeting_point_lat' => $request->meeting_point_lat,
+                        'meeting_point_lng' => $request->meeting_point_lng,
+                        'max_participants' => $request->max_participants,
+                        'description' => $request->description,
+                        'status' => $request->status,
+                    ]);
+                }
+            }
+        }
+
+        if ($request->input('status') === 'cancelled') {
+            return redirect()->route('rides.index')
+                ->with('success', 'Ride cancelled!');
+        }
+
         return redirect()->route('rides.show', $ride)
             ->with('success', 'Ride updated successfully!');
     }
@@ -289,6 +389,15 @@ class RideController extends Controller
         $this->authorize('delete', $ride);
 
         $ride->loadMissing('route');
+
+        if (request()->input('scope') === 'series') {
+            $root = $ride->seriesRoot ?: $ride;
+            GroupRide::where(function ($q) use ($root) {
+                $q->where('id', $root->id)->orWhere('recurrence_series_id', $root->id);
+            })->where('ride_date', '>=', $ride->ride_date)->delete();
+
+            return redirect()->route('rides.index')->with('success', 'Ride series deleted!');
+        }
 
         $attendees = $ride->confirmedAttendees()
             ->where('ride_version', $ride->version)

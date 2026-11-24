@@ -24,6 +24,9 @@ class GroupRide extends Model
         'max_participants',
         'status',
         'version',
+        'recurrence_series_id',
+        'recurrence_rule',
+        'recurrence_index',
     ];
 
     protected $casts = [
@@ -33,6 +36,8 @@ class GroupRide extends Model
         'max_participants' => 'integer',
         'version' => 'integer',
         'reminder_sent_at' => 'datetime',
+        'recurrence_rule' => 'array',
+        'recurrence_index' => 'integer',
     ];
 
     public function route(): BelongsTo
@@ -53,6 +58,16 @@ class GroupRide extends Model
     public function routeOptions(): HasMany
     {
         return $this->hasMany(GroupRideRouteOption::class)->orderBy('sort_order');
+    }
+
+    public function seriesRoot(): BelongsTo
+    {
+        return $this->belongsTo(GroupRide::class, 'recurrence_series_id');
+    }
+
+    public function occurrences(): HasMany
+    {
+        return $this->hasMany(GroupRide::class, 'recurrence_series_id');
     }
 
     public function votes(): HasMany

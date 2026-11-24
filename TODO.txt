@@ -1,5 +1,0 @@
-* Add ability for each user to link to Wahoo, and sync the gpx to wahoo (next to the download option)
-* Add route download/wahoo sync option to group ride details page
-* Add option for user to opt in to email notifications
-* Add option for user to add telegram bot notification
-* Add ability to create re-occuring rides, daily, weekly, fortnightly, monthly (on 2nd tuesday of the month for example)
